@@ -1,268 +1,38 @@
 #!/usr/bin/env ruby
 # whale
 
-# 20080521
-WHALE_VERSION = '0.5.0'
+# 20110907
 
-# Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
+require '../lib/0'
 
-# History: 
-# 1. I took #read_words_file from difflist.  
-# 2. I took a bit of RandomMethod for #random_word.   
+switches = (
+  Switches.new do |s|
+    s.banner = 'Usage: whale <url> and any of the following options...'
+    s.set(:url){'The location of the phishing form.'}
+    s.set(:f, :form, :form_name){'If left empty, the first form on the page will be used.'}
+    s.set(:n, :form_number){'This will set the number of the form in order of appearance on the page.  Use zero-based indexing.'}
+    s.set(:user_field, :username_field, :user_field_name, :username_field_name){'The name of the username field.'}
+    s.set(:user_field_number, :username_field_number){'The position of the username field in relation to the form it is attached to.  Use zero-based indexing.'}
+    s.set(:pass_field, :password_field, :pass_field_name, :password_field_name){'The name of the password field.'}
+    s.set(:pass_field_number, :password_field_number){'The position of the password field in relation to the form it is attached to.  Use zero-based indexing.'}
+    s.set(:v?, :verbose?){'Outputs each submission as it goes.'}
+    s.set(:e?, :username_is_email_address?){'Automatically generate a username which is in the form of an email address.'}
+    s.set(:a, :user_agent){'What webclient I should pretend to be.'}
+    # s.set :help
+    # s.set :version
+  end
+)
 
-# Discussion: 
-# 1. As yesterday's site is down I've selected my next victim.  It is a PayPal phishing site and they've got some Javascript which  checks that the username conforms to being an acceptable email address.  Then I noticed that the form is not dependent on Javascript and so it could be gotton around by simply ignoring Javascript as Whale does.  However, since one of the goals is to make the real user data indistinguishable from the fake, it seems as if it is a better idea to make the data input from Whale look like the most likely set of real user data.  
-# 2. The changes from 0.4.2 were precipitated by a site which had no form name.  Although much of the changes were in addition to this particular purpose.  
+url = (
+  if (ARGV[0] !~ /^-/ && ARGV[0])
+    ARGV[0]
+  elsif switches.url
+    switches.url
+  else
+    raise RuntimeError, 'No URL provided.'
+  end
+)
 
-# Changes since 0.4: 
-# 1. 
-
-# Todo: 
-# 1. Command line options library needed really, since fixed order options is a bit blerrr.  Done as of 0.4.4, but really working as of 0.4.5.  
-# 2. Be able to set the username and password fields by number.  Done as of 0.4.7.  
-# 3. On-the-fly randomly generated passwords.  
-
-# Roadmap:
-# 0.5.x will have automated hooks into dslreports.com/phishtrack.  
-# 0.6.x will have a generalised interface into hooking in phishing databases and will have one or two additional databases.  
-# 0.7.x will offer threading for maximum throughput!  
-# 0.8.x will optionally randomize submission frequency, such that a maximum and a minimum number of submissions can be set per period.  
-
-require 'rubygems'
-require 'mechanize'
-
-require 'pp'
-
-$debug = false
-
-TLD = %w{com net org edu int mil gov arpa biz aero name coop info pro museum}
-TLD_SIZE = 15
-
-class File
-  
-  def self.collect(filename, &block)
-    a = []
-    File.open(filename, 'r').each{|line| a << block.call(line)}
-    a
-  end
-  
-end
-
-require 'optparse'
-require 'ostruct'
-
-class Options < OpenStruct
-  
-  def initialize
-    @op = OptionParser.new
-    yield self if block_given?
-    parse if block_given?
-    super
-  end
-  
-  def set(attr, *opts, &block)
-    @op.on(opts, block) do |opt|
-      self.send(attr.to_s + '=', opt)
-    end
-  end
-  
-  def on(*opts, &block)
-    @op.on(opts, block)
-  end
-  
-  def banner=(s)
-    @op.banner = s
-  end
-  
-  def parse!
-    @op.parse!
-  end
-  
-end # class Options
-
-class Whale
-  
-  attr_accessor :options
-  attr_accessor :url
-  attr_accessor :form_name, :form_number
-  attr_accessor :username_field_name, :username_field_number
-  attr_accessor :password_field_name, :password_field_number
-  attr_accessor :verbose, :username_is_email_address, :user_agent
-  attr_reader :words_size
-  
-  def initialize(url = nil, options = {})
-    @url = url
-    @form_name = options[:form_name] || nil
-    @form_number = options[:form_number] || nil
-    @username_field_name = options[:username_fieldname] || nil
-    @username_field_number = options[:username_field_number] || nil
-    @password_field_name = options[:password_field_name] || nil
-    @password_field_number = options[:password_field_number] || nil
-    @verbose = options[:verbose] || false
-    @username_is_email_address = options[:username_is_email_address] || false
-    @user_agent = options[:user_agent] || 'Windows IE 6'
-    @words_size = words.size # It is more efficient for this to be called once here.  
-  end
-  
-  def parse
-    parse_url
-    parse_options
-    self
-  end
-  
-  def parse_url
-    if (ARGV[0] !~ /^-/ && ARGV[0])
-      @url = ARGV[0]
-    else
-      raise RuntimeError, 'No URL provided.'
-    end
-    self
-  end
-  
-  def parse_options
-    op = Options.new do |opts|
-      opts.banner = 'Usage: whale <url> and any of the following options...'
-      opts.set(:form_name, '-f', '--form', '--form-name', '--form_name <form_name>', 'If left empty, the first form on the page will be used.')
-      self.class.send(:attr_accessor, :form_name)
-      self.class.send(:form_name=, op.form_name)
-      opts.on('-n', '--form-number', '--form_number <form_number>', 'This will set the number of the form in order of appearance on the page.  Use zero-based indexing.') do |opt|
-        send(:attr_accessor, :form_number)
-        opts.form_number = opt
-      end
-      opts.on('-u', '--username-field-name', '--username_field_name <username_field_name>', 'The name of the username field.') do |opt|
-        send(:attr_accessor, :username_field_name)
-        username_field_name = opt
-      end
-      opts.on('-u', '--username-field-number', '--username_field_number <username_field_number>', 'The position of the username field in relation to the form it is attached to.  Use zero-based indexing.') do |opt|
-        send(:attr_accessor, :username_field_number)
-        username_field_number = opt
-      end
-      opts.on('-p', '--password-field-name', '--password_field_name <password_field_name>', 'The name of the password field.') do |opt|
-        opts.password_field_name = opt
-      end
-      opts.on('-p', '--password-field-number', '--password_field_number <password_field_number>', 'The position of the password field in relation to the form it is attached to.  Use zero-based indexing.') do |opt|
-        opts.password_field_number = opt
-      end
-      opts.on('-V', '--verbose', 'Outputs each submission as it goes.') do |opt|
-        opts.verbose = opt
-      end
-      opts.on('-e', '--username-is-email-address', '--username_is_email_address', 'Automatically generate a username which is in the form of an email address.') do |opt|
-        opts.username_is_email_address = opt
-      end
-      opts.on('-a', '--user-agent', '--user_agent <user_agent>', 'What webclient I should pretend to be.') do |opt|
-        opts.user_agent = opt
-      end
-      opts.on('-?', '--help', 'Displays this information.') do
-        puts opts
-        exit
-      end
-      opts.on('-v', '--version', 'Displays version information.') do
-        puts "whale #{WHALE_VERSION}"
-        exit
-      end
-    end
-    self
-  end # def parse_options
-  
-  def counter_phish
-    start_time = Time.now
-    puts "Whale session begun #{start_time}."
-    submission_count = 0
-    @m = WWW::Mechanize.new
-    @m.user_agent_alias = user_agent
-    begin
-      loop do
-        set_username_field
-        set_password_field
-        @m.submit(form)
-        pp @m.submit(form) if $debug
-        submission_count += 1
-        puts "#{submission_count} #{username}:#{password}" if verbose
-      end
-    ensure
-      finish_time = Time.now
-      time_delta_in_minutes = (finish_time - start_time) / 60
-      submissions_per_minute = submission_count / time_delta_in_minutes
-      puts "Whale session terminated #{finish_time} with #{submission_count} counter-phishes served in #{time_delta_in_minutes} minutes for an average of #{submissions_per_minute} submissions per minute."
-    end
-  end # def counter_phish
-  
-  private
-  
-  def words(filename = '/usr/share/dict/words')
-    @words ||= File.collect(filename){|line| line.chomp}
-  end
-  
-  def random_word
-    words[rand(words_size)]
-  end
-  
-  def random_TLD
-    TLD[rand(TLD_SIZE)]
-  end
-  
-  def page # This is a big timesaver.  I think I don't need to keep grabbing the page everytime.  
-    @page ||= (
-      _page = @m.get(@url)
-      md = _page.body.match(/meta.*?Refresh.*?url=(.*?)"/i)
-      if md
-        puts 'meta_refresh_url found' if $debug
-        _page = @m.get(md[1])
-        pp _page if $debug
-      end
-      pp _page if $debug
-      _page
-    )
-  end
-  
-  def form # Similarly to #page.  I don't think I need to grab the form everytime either.  
-    @form ||= (
-      if form_name
-        page.form(form_name)
-      elsif form_number
-        page.forms[form_number.to_i]
-      else
-        page.forms[0]
-      end
-    )
-  end
-  
-  def username
-    if username_is_email_address
-      "#{random_word}@#{random_word}.#{random_TLD}"
-    else
-      random_word
-    end
-  end
-  
-  def password
-    random_word
-  end
-  
-  def set_username_field
-    if username_field_name
-      form[username_field_name] = username
-    elsif username_field_number
-      form.fields[username_field_number] = username
-    else
-      form.fields[0] = username
-    end
-  end
-  
-  def set_password_field
-    if password_field_name
-      form[password_field_name] = password
-    elsif password_field_number
-      form.fields[password_field_number] = password
-    else
-      form.fields[1] = password
-    end
-  end
-  
-end
-
-if __FILE__ == $0
-  w = Whale.new
-  w.parse
-  w.counter_phish
-end
+w = Whale.new(url, switches.to_h)
+#p w
+w.counter_phish
