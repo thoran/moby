@@ -2,7 +2,7 @@
 # whale
 
 # 20061009
-# 0.2.2
+# 0.2.3
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -16,10 +16,11 @@
 # 3. Added the count of submissions next to output of each username:password pair.  
 # 4. It now attempts to trap when a break occurs to output a summary.  
 # 5. The total number of submissions is now output at the end verbose or not.  
+# 6. Added more stuff to the summary as per Todo 2.  
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit blerrr.  
-# 2. Trap breaking into the loop and output stuff like the end time, total time, and total count.  End time and total count done as of 0.2.2.  Now I just need to do a time difference and then calculate the number per second or minute or something like that might be nice!  
+# 2. Trap breaking into the loop and output stuff like the end time, total time, and total count.  All done as of 0.2.3.  
 
 require 'rubygems'
 require 'mechanize'
@@ -34,7 +35,8 @@ class Whale
   end
   
   def counter_phish
-    puts "Whale session begun #{Time.now}."
+    start_time = Time.now
+    puts "Whale session begun #{start_time}."
     submission_count = 0
     m = WWW::Mechanize.new
     begin
@@ -50,7 +52,10 @@ class Whale
         puts "#{submission_count} #{username}:#{password}" if @verbose
       end
     ensure
-      puts "Whale session terminated #{Time.now} with #{submission_count} counter_phishes served"
+      finish_time = Time.now
+      time_delta_in_minutes = (finish_time - start_time) * 60
+      submissions_per_minute = submission_count/time_delta_in_minutes
+      puts "Whale session terminated #{finish_time} with #{submission_count} counter-phishes served in #{time_delta_in_minutes} minutes for an average of #{submissions_per_minute} submissions per minute."
     end
   end
   
