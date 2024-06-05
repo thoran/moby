@@ -2,7 +2,7 @@
 # whale
 
 # 20080520
-WHALE_VERSION = '0.4.5'
+WHALE_VERSION = '0.4.6'
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -31,12 +31,22 @@ WHALE_VERSION = '0.4.5'
 # 11. Fixed the remnants of what I copied from express.  
 # 12. Made more extensive use of accessors/readers.  
 # 13. Overall much lispier.  
+# 6
+# 14. I can now set which form to be used by a zero-based index via form_number.  
+# 15. Forgot to do command line parsing of the URL!  
+# 16. Defaults for Whale#initialize.  
+# 17. require 'optparse'!  
+# 18. A few option parsing and variable setting tidyups.  
+# 19. Fixed a problem with the mechanize instance not being found, so it is now an instanc variable.  
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit blerrr.  Done as of 0.4.4, but really working as of 0.4.5.  
+# 2. Be able to set the username and password fields by number.  
 
 require 'rubygems'
 require 'mechanize'
+
+require 'optparse'
 require 'pp'
 
 $debug = false
@@ -47,7 +57,7 @@ TLD_SIZE = 15
 class Options
   
   class << self
-    attr_accessor :form_name, :username_field_name, :password_field_name, :verbose, :username_is_email_address, :user_agent
+    attr_accessor :form_name, :form_number, :username_field_name, :password_field_name, :verbose, :username_is_email_address, :user_agent
   end
   
 end # class Options
@@ -55,12 +65,12 @@ end # class Options
 class Whale
   
   attr_accessor :url
-  attr_writer :form_name, :username_field_name, :password_field_name
+  attr_accessor :form_name, :form_number, :username_field_name, :password_field_name
   attr_accessor :verbose, :username_is_email_address, :user_agent
   attr_reader :words, :words_size
   
-  def initialize(url, options)
-    @url = url || nil
+  def initialize(url = nil, options = {})
+    @url = url
     @form_name = options[:form_name] || nil
     @username_field_name = options[:username_fieldname] || nil
     @password_field_name = options[:password_field_name] || nil
@@ -71,16 +81,32 @@ class Whale
     @words_size = @words.size # It is more efficient for this to be called once here.  
   end
   
+  def parse
+    parse_url
+    parse_options
+  end
+  
+  def parse_url
+    if (ARGV[0] !~ /^-/ && ARGV[0])
+      @url = ARGV[0]
+    else
+      raise RuntimeError, 'No URL provided.'
+    end
+  end
+  
   def parse_options
     op = OptionParser.new do |opts|
       opts.banner = 'Usage: whale <url> and any of the following options...'
       opts.on('-f', '--form', '--form-name', '--form_name <form_name>', "If left empty, the first form on the page will be used.") do |opt|
         Options.form_name = opt
       end
+      opts.on('-n', '--form-number', '--form_number <form_number>', "This will set the number of the form in order of appearance on the page.  Use zero-based indexing...") do |opt|
+        Options.form_number = opt
+      end
       opts.on('-u', '--username-field-name', '--username_field_name <username_field_name>', '') do |opt|
         Options.username_field_name = opt
       end
-      opts.on('-p', '--dbms-password-field-name', '--dbms_password_field_name <password_field_name>', '') do |opt|
+      opts.on('-p', '--password-field-name', '--password_field_name <password_field_name>', '') do |opt|
         Options.password_field_name = opt
       end
       opts.on('-V', '--verbose', 'Outputs each submission as it goes.') do |opt|
@@ -102,21 +128,21 @@ class Whale
       end
     end
     op.parse!
-    %w{url form_name, user_field_name, password_field_name, verbose, username_is_email_address, user_agent}.each{|o| self.send("#{o}=", Options.o) if Options.o}
+    %w{form_name form_number username_field_name password_field_name verbose username_is_email_address user_agent}.each{|o| new_value = Options.send(o); self.send("#{o}=", new_value) if new_value}
   end # def parse_options
   
   def counter_phish
     start_time = Time.now
     puts "Whale session begun #{start_time}."
     submission_count = 0
-    m = WWW::Mechanize.new
-    m.user_agent_alias = user_agent
+    @m = WWW::Mechanize.new
+    @m.user_agent_alias = user_agent
     begin
       loop do
         set_username_field
         set_password_field
-        m.submit(form)
-        pp m.submit(form) if $debug
+        @m.submit(form)
+        pp @m.submit(form) if $debug
         submission_count += 1
         puts "#{submission_count} #{username}:#{password}" if verbose
       end
@@ -146,11 +172,11 @@ class Whale
   
   def page # This is a big timesaver.  I think I don't need to keep grabbing the page everytime.  
     @page ||= (
-      _page = m.get(@url)
+      _page = @m.get(@url)
       md = _page.body.match(/meta.*?Refresh.*?url=(.*?)"/i)
       if md
         puts 'meta_refresh_url found' if $debug
-        _page = m.get(md[1])
+        _page = @m.get(md[1])
         pp _page if $debug
       end
       pp _page if $debug
@@ -160,8 +186,10 @@ class Whale
   
   def form # Similarly to #page.  I don't think I need to grab it everytime either.  
     @form ||= (
-      if @form_name
-        page.form(@form_name)
+      if form_name
+        page.form(form_name)
+      elsif form_number
+        page.forms[form_number.to_i]
       else
         page.forms[0]
       end
@@ -181,16 +209,16 @@ class Whale
   end
   
   def set_username_field
-    if @username_field_name
-      form[@username_field_name] = username
+    if username_field_name
+      form[username_field_name] = username
     else
       form.fields[0] = username
     end
   end
   
   def set_password_field
-    if @password_field_name
-      form[@password_field_name] = password
+    if password_field_name
+      form[password_field_name] = password
     else
       form.fields[1] = password
     end
@@ -200,6 +228,6 @@ end
 
 if __FILE__ == $0
   w = Whale.new
-  w.parse_options
+  w.parse
   w.counter_phish
 end
