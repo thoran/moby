@@ -2,7 +2,7 @@
 # whale
 
 # 20061009
-# 0.1.0
+# 0.1.1
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -12,6 +12,7 @@
 
 # Changes since 0.0: 
 # 1. It now has a verbose mode which will output the username and password which has been randomly generating just prior to it being submitted.  
+# 2. Rejigged the value generation stuff, since I was not outputting the value submitted, but generating a new one.  That's the problem with DSLs: one forgets what's a variable and what's a method.  
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit bler.  
@@ -34,10 +35,10 @@ class Whale
       page = m.get(@url)
       #pp page  #debug
       form = page.form(@form_name)
-      form.fields.find {|f| f.name == @username_field_name}.value = random_word
-      print "#{random_word}:" if @verbose
-      form.fields.find {|f| f.name == @password_field_name}.value = random_word
-      puts "#{random_word}" if @verbose
+      username, password = random_word, random_word
+      puts "#{username}:#{password}" if @verbose
+      form.fields.find {|f| f.name == @username_field_name}.value = username
+      form.fields.find {|f| f.name == @password_field_name}.value = password
       m.submit(form)
     end
   end
