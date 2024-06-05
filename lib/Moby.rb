@@ -1,11 +1,14 @@
-# Whale.rb
-# Whale
+# Moby.rb
+# Moby
 
-require 'pp'
-require 'mechanize'
+lib_dir = File.expand_path(File.join('..', 'lib'))
+$LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
+
 require 'File/self.collect'
+require 'mechanize'
+require 'pp'
 
-class Whale
+class Moby
 
   TLD = %w{com net org edu int mil gov arpa biz aero name coop info pro museum}
 
@@ -59,7 +62,7 @@ class Whale
 
   def counter_phish
     start_time = Time.now
-    puts "Whale session begun #{start_time}."
+    puts "Moby session begun #{start_time}."
     submission_count = 0
     begin
       loop do
@@ -72,15 +75,15 @@ class Whale
         submission_count += 1
         puts "#{submission_count} #{username_field.value}:#{password_field.value}" if @verbose
       rescue Net::HTTP::Persistent::Error
-        puts "\n\nNet::HTTP::Persistent::Error rescued.\n\n"
+        puts "\n\nNet::HTTP::Persistent::Error rescued.\n\n" if @verbose
       rescue Net::OpenTimeout
-        puts "\n\nNet::OpenTimeout rescued.\n\n"
+        puts "\n\nNet::OpenTimeout rescued.\n\n" if @verbose
       end
     ensure
       finish_time = Time.now
       time_delta_in_minutes = (finish_time - start_time) / 60
       submissions_per_minute = submission_count / time_delta_in_minutes
-      puts "Whale session terminated #{finish_time} with #{submission_count} counter-phishes served in #{time_delta_in_minutes} minutes for an average of #{submissions_per_minute} submissions per minute."
+      puts "Moby session terminated #{finish_time} with #{submission_count} counter-phishes served in #{time_delta_in_minutes} minutes for an average of #{submissions_per_minute} submissions per minute."
     end
   end
 

@@ -1,22 +1,27 @@
 #!/usr/bin/env ruby
-# whale
+# moby
 
-# 20190820
-# 0.7.4
+# 20190821
+# 0.8.0
 
-# Description: Sometimes when they go fishing, they get a whale and it sinks their boat.
+# Description: Sometimes when they go fishing, they get Moby and it sinks their boat.
+
+# Changes:
+# 1. /whale/moby/, since whaling is a thing, whereas when this was first written it was not.
+# 2. + Gemfile
+# 3. + lib/File/self.collect.rb, et. al.
 
 lib_dir = File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
 
-require 'Switches'
-require 'Whale'
+require 'Moby'
+require 'switches.rb'
 
-VERSION_STRING = '0.7.4'
+VERSION_STRING = '0.8.0'
 
 def switches
   Switches.new do |s|
-    s.banner = 'Usage: whale <url> and any of the following options...'
+    s.banner = 'Usage: moby <url> and any of the following options...'
     s.set(:url){'The location of the phishing form.'}
     s.set(:f, :form, :form_name){'If left empty, the first form on the page will be used.'}
     s.set(:n, :form_number){'This will set the number of the form in order of appearance on the page.  Use zero-based indexing.'}
@@ -28,7 +33,7 @@ def switches
     s.set(:e?, :username_is_email_address?){'Automatically generate a username which is in the form of an email address.'}
     s.set(:username_prefilled){'No need to supply an email address in the form.'}
     s.set(:a, :user_agent){'What webclient I should pretend to be.'}
-    s.set(:help){'Usage: whale <url> and any of the following options...'}
+    s.set(:help){'Usage: moby <url> and any of the following options...'}
     s.set(:version){VERSION_STRING}
     s.set(:debug?){'Show debugging information.'}
     s.set(:username_hostname){'The hostname to be used when the username is an email address.'}
@@ -49,7 +54,7 @@ def main
   username_hostname = args[:username_hostname]
   username_is_email_address = args[:username_is_email_address?]
   verbose = args[:verbose?]
-  whale = Whale.new(
+  moby = Moby.new(
     debug: debug,
     form_name: form_name,
     form_number: form_number,
@@ -63,7 +68,7 @@ def main
     username_is_email_address: username_is_email_address,
     verbose: verbose
   )
-  whale.counter_phish
+  moby.counter_phish
 end
 
 main
