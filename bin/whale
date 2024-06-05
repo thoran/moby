@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # whale
 
-# 20080521
-WHALE_VERSION = '0.4.7'
+# 20080829
+WHALE_VERSION = '0.4.8'
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -43,6 +43,8 @@ WHALE_VERSION = '0.4.7'
 # 21. Numerous methods now return self.  It's a bit nicer and allows for chaining...  I don't know if I WANT to use it, but its there if I do.  
 # 22. Dropped in File.collect for fun (well actually I wrote it for this, cause it looks nicer), for use in Whale#read_words_file.  
 # 23. Made the file handling stuff lispier.  
+# 8
+# 24. I had overlapping short command line option switches for username and password field names and numbers, such that the latter overwrites the former...  
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit blerrr.  Done as of 0.4.4, but really working as of 0.4.5.  
@@ -137,13 +139,13 @@ class Whale
       opts.on('-u', '--username-field-name', '--username_field_name <username_field_name>', 'The name of the username field.') do |opt|
         Options.username_field_name = opt
       end
-      opts.on('-u', '--username-field-number', '--username_field_number <username_field_number>', 'The position of the username field in relation to the form it is attached to.  Use zero-based indexing.') do |opt|
+      opts.on('--username-field-number', '--username_field_number <username_field_number>', 'The position of the username field in relation to the form it is attached to.  Use zero-based indexing.') do |opt|
         Options.username_field_number = opt
       end
       opts.on('-p', '--password-field-name', '--password_field_name <password_field_name>', 'The name of the password field.') do |opt|
         Options.password_field_name = opt
       end
-      opts.on('-p', '--password-field-number', '--password_field_number <password_field_number>', 'The position of the password field in relation to the form it is attached to.  Use zero-based indexing.') do |opt|
+      opts.on('--password-field-number', '--password_field_number <password_field_number>', 'The position of the password field in relation to the form it is attached to.  Use zero-based indexing.') do |opt|
         Options.password_field_number = opt
       end
       opts.on('-V', '--verbose', 'Outputs each submission as it goes.') do |opt|
