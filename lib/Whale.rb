@@ -16,12 +16,14 @@ class Whale
     :password_field_name,
     :password_field_number,
     :url,
-    :user_agent,
     :username_field_name,
     :username_field_number,
     :username_hostname,
     :username_is_email_address,
     :verbose
+
+  attr_writer\
+    :user_agent
 
   def initialize(
     debug: false,
@@ -34,7 +36,7 @@ class Whale
     username_field_name: 'username',
     username_field_number: 0,
     username_hostname: nil,
-    username_is_email_address: false,
+    username_is_email_address: nil,
     verbose: false
   )
     @debug = debug
@@ -61,14 +63,14 @@ class Whale
     submission_count = 0
     begin
       loop do
-        set_user_agent
-        set_username_field
-        set_password_field
+        mechanize.user_agent_alias = user_agent
+        username_field.value = username
+        password_field.value = password
         pp page if @debug
         result = mechanize.submit(form)
         pp result if @debug
         submission_count += 1
-        puts "#{submission_count} #{username}:#{password}" if @verbose
+        puts "#{submission_count} #{username_field.value}:#{password_field.value}" if @verbose
       rescue EOFError
         puts "\nEOFError rescued.\n"
       end
@@ -127,7 +129,7 @@ class Whale
   end
 
   def username
-    if username_is_email_address
+    if username_is_email_address?
       if username_hostname
         "#{random_word}@#{username_hostname}"
       else
@@ -142,32 +144,32 @@ class Whale
     random_word
   end
 
-  def set_user_agent
-    if @user_agent
-      mechanize.user_agent_alias = @user_agent
+  def user_agent
+    @user_agent || random_user_agent
+  end
+
+  def username_field
+    if @username_field_name
+      form.field(@username_field_name)
+    elsif @username_field_number
+      form.fields[@username_field_number]
     else
-      mechanize.user_agent_alias = random_user_agent
+      form.fields[0]
     end
   end
 
-  def set_username_field
-    if username_field_name
-      form[username_field_name] = username
-    elsif username_field_number
-      form.fields[username_field_number].value = username
+  def password_field
+    if @password_field_name
+      form.field(@password_field_name)
+    elsif @password_field_number
+      form.fields[@password_field_number]
     else
-      form.fields[0].value = username
+      form.fields[1]
     end
   end
 
-  def set_password_field
-    if password_field_name
-      form[password_field_name] = password
-    elsif password_field_number
-      form.fields[password_field_number].value = password
-    else
-      form.fields[1].value = password
-    end
+  def username_is_email_address?
+    @username_is_email_address || @username_hostname || username_field.name == 'email'
   end
 
 end
