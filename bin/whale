@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # whale
 
-# 20061009
-# 0.4.2
+# 20080520
+# 0.4.3
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -18,6 +18,9 @@
 # 2. I've also added the option to be able to follow meta-refresh links.  Neat!  I can test it on that PayPal phishing site which necessitated, or at least had recommended, having email addresses, since it used a meta-refresh.  
 # 3. I've removed the debugging stuff.  
 # 4. There was an error if there was no meta refresh of course!  So now it doesn't attempt to access the match data array unless there's something in it.  
+# 3
+# 5. Somtimes a form won't have a name, so I need to just grab the first one or a subsequent one if need be...  
+# 6. Added a hash to pass in options to Whale.initialize.  
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit blerrr.  
@@ -31,8 +34,18 @@ TLD_SIZE = 15
 
 class Whale
   
-  def initialize(url, form_name, username_field_name, password_field_name, verbose = false, username_is_email_address = false, user_agent = 'Windows IE 6')
-    @url, @form_name, @username_field_name, @password_field_name, @verbose, @username_is_email_address, @user_agent = url, form_name, username_field_name, password_field_name, verbose, username_is_email_address, user_agent
+  attr_accessor :url, :form_name, :username_field_name, :password_field_name
+  attr_accessor :verbose, :username_is_email_address, :user_agent
+  attr_reader :words, :words_size
+  
+  def initialize(url, options)
+    @url = url
+    @form_name = options[:form_name] || nil
+    @username_field_name = options[:username_fieldname] || 'username'
+    @password_field_name = options[:password_field_name] || 'password'
+    @verbose = options[:verbose] || false
+    @username_is_email_address = options[:username_is_email_address] || false
+    @user_agent = options[:user_agent] || 'Windows IE 6'
     @words = read_words_file('/usr/share/dict/words')
     @words_size = @words.size # It is more efficient for this to be called once here.  
   end
@@ -53,7 +66,11 @@ class Whale
           #pp page  #debug
         end
         #pp page  #debug
-        form = page.form(@form_name)
+        if @form_name
+          form = page.form(@form_name)
+        else
+          form = page.forms[0]
+        end
         if @username_is_email_address
           username = "#{random_word}@#{random_word}.#{random_TLD}"
         else
