@@ -2,7 +2,7 @@
 # whale
 
 # 20061009
-# 0.0.3
+# 0.0.4
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -12,6 +12,7 @@
 
 # Changes: 
 # 1. It is mostly complete now.  It should read in the words file and submit one only counter_phish.  
+# 2. I need to be able to get it to find the form field names dynamically (based on inputs) and send wouldn't do it.  So hopefully Mike's block approach has been kept by Aaron.  Fingers crossed...  
 
 # Todo: 
 # 1. Iterate infinitely over the @words array and hammer the fuckers.  
@@ -34,8 +35,8 @@ class Whale
     pp page  #debug
     
     form = page.form(@form_name)
-    form.send(@username_field_name) = random_word
-    form.send(@password_field_name) = random_word
+    form.fields.find {|f| f.name == @username_field_name}.value = random_word
+    form.fields.find {|f| f.name == @password_field_name}.value = random_word
     page = m.submit(form)
     pp page  #debug
   end
