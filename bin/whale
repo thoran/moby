@@ -2,7 +2,7 @@
 # whale
 
 # 20061009
-# 0.3.1
+# 0.4.0
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -13,24 +13,24 @@
 # Discussion: 
 # 1. As yesterday's site is down I've selected my next victim.  It is a PayPal phishing site and they've got some Javascript which  checks that the username conforms to being an acceptable email address.  Then I noticed that the form is not dependent on Javascript and so it could be gotton around by simply ignoring Javascript as Whale does.  However, since one of the goals is to make the real user data indistinguishable from the fake, it seems as if it is a better idea to make the data input from Whale look like the most likely set of real user data.  
 
-# Changes since 0.2: 
-# 1. To accomodate Discussion 1 I've added TLD, TLD_SIZE, and random_TLD and a conditional to make use of random_TLD and Co. in #counter_phish.  
-# 2. Excluded the pp stuff, since it tests OK.  
+# Changes since 0.3: 
+# 1. I've added the option to select a user agent.  
+# 2. I've also added the option to be able to follow meta-refresh links.  Neat!  I can test it on that PayPal phishing site which necessitated, or at least had recommended, having email addresses, since it used a meta-refresh.  
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit blerrr.  
 
 require 'rubygems'
 require 'mechanize'
-#require 'pp'
+require 'pp'
 
 TLD = %w{com net org edu int mil gov arpa biz aero name coop info pro museum}
 TLD_SIZE = 15
 
 class Whale
   
-  def initialize(url, form_name, username_field_name, password_field_name, verbose = false, username_is_email_address = false)
-    @url, @form_name, @username_field_name, @password_field_name, @verbose, @username_is_email_address = url, form_name, username_field_name, password_field_name, verbose, username_is_email_address
+  def initialize(url, form_name, username_field_name, password_field_name, verbose = false, username_is_email_address = false, user_agent = 'Windows IE 6')
+    @url, @form_name, @username_field_name, @password_field_name, @verbose, @username_is_email_address, @user_agent = url, form_name, username_field_name, password_field_name, verbose, username_is_email_address, user_agent
     @words = read_words_file('/usr/share/dict/words')
     @words_size = @words.size # It is more efficient for this to be called once here.  
   end
@@ -40,10 +40,16 @@ class Whale
     puts "Whale session begun #{start_time}."
     submission_count = 0
     m = WWW::Mechanize.new
+    m.user_agent_alias = @user_agent
     begin
       loop do
         page = m.get(@url)
-        #pp page  #debug
+        if meta_refresh_url = page.body.match(/meta.*?Refresh.*?url=(.*?)"/i)[1]
+          puts 'meta_refresh_url found'
+          page = m.get(meta_refresh_url)
+          pp page  #debug
+        end
+        pp page  #debug
         form = page.form(@form_name)
         if @username_is_email_address
           username = "#{random_word}@#{random_word}.#{random_TLD}"
@@ -53,7 +59,7 @@ class Whale
         password = random_word
         form[@username_field_name] = username
         form[@password_field_name] = password
-        m.submit(form)
+        pp m.submit(form)  #part-debug
         submission_count += 1
         puts "#{submission_count} #{username}:#{password}" if @verbose
       end
@@ -84,6 +90,6 @@ class Whale
 end
 
 if __FILE__ == $0
-  w = Whale.new(ARGV[0], ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5])
+  w = Whale.new(ARGV[0], ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6])
   w.counter_phish
 end
