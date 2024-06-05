@@ -2,7 +2,7 @@
 # whale
 
 # 20061009
-# 0.2.4
+# 0.3.0
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -10,27 +10,26 @@
 # 1. I took #read_words_file from difflist.  
 # 2. I took a bit of RandomMethod for #random_word.   
 
-# Changes since 0.1: 
-# 1. Added the time of script start into the output.  
-# 2. Moved the output to immediately after submission.  
-# 3. Added the count of submissions next to output of each username:password pair.  
-# 4. It now attempts to trap when a break occurs to output a summary.  
-# 5. The total number of submissions is now output at the end verbose or not.  
-# 6. Added more stuff to the summary as per Todo 2.  
-# 7. The calculation of the delta of time in minutes is now correct I think.  
+# Discussion: 
+# 1. As yesterday's site is down I've selected my next victim.  It is a PayPal phishing site and they've got some Javascript which  checks that the username conforms to being an acceptable email address.  Then I noticed that the form is not dependent on Javascript and so it could be gotton around by simply ignoring Javascript as Whale does.  However, since one of the goals is to make the real user data indistinguishable from the fake, it seems as if it is a better idea to make the data input from Whale look like the most likely set of real user data.  
+
+# Changes since 0.2: 
+# 1. To accomodate Discussion 1 I've added TLD, TLD_SIZE, and random_TLD and a conditional to make use of random_TLD and Co. in #counter_phish.  
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit blerrr.  
-# 2. Trap breaking into the loop and output stuff like the end time, total time, and total count.  All done as of 0.2.3.  
 
 require 'rubygems'
 require 'mechanize'
-#require 'pp'
+require 'pp'
+
+TLD = %w{com net org edu int mil gov arpa biz aero name coop info pro museum}
+TLD_SIZE = 15
 
 class Whale
   
-  def initialize(url, form_name, username_field_name, password_field_name, verbose = false)
-    @url, @form_name, @username_field_name, @password_field_name, @verbose = url, form_name, username_field_name, password_field_name, verbose
+  def initialize(url, form_name, username_field_name, password_field_name, verbose = false, username_is_email_address = false)
+    @url, @form_name, @username_field_name, @password_field_name, @verbose, @username_is_email_address = url, form_name, username_field_name, password_field_name, verbose, username_is_email_address
     @words = read_words_file('/usr/share/dict/words')
     @words_size = @words.size # It is more efficient for this to be called once here.  
   end
@@ -43,19 +42,24 @@ class Whale
     begin
       loop do
         page = m.get(@url)
-        #pp page  #debug
+        pp page  #debug
         form = page.form(@form_name)
-        username, password = random_word, random_word
-        form.fields.find {|f| f.name == @username_field_name}.value = username
-        form.fields.find {|f| f.name == @password_field_name}.value = password
-        m.submit(form)
+        if @username_is_email_address
+          username = "#{random_word}@#{random_word}.#{random_TLD}"
+        else
+          username = random_word
+        end
+        password = random_word
+        form[@username_field_name] = username
+        form[@password_field_name] = password
+        pp m.submit(form)
         submission_count += 1
         puts "#{submission_count} #{username}:#{password}" if @verbose
       end
     ensure
       finish_time = Time.now
       time_delta_in_minutes = (finish_time - start_time) / 60
-      submissions_per_minute = submission_count/time_delta_in_minutes
+      submissions_per_minute = submission_count / time_delta_in_minutes
       puts "Whale session terminated #{finish_time} with #{submission_count} counter-phishes served in #{time_delta_in_minutes} minutes for an average of #{submissions_per_minute} submissions per minute."
     end
   end
@@ -72,9 +76,13 @@ class Whale
     @words[rand(@words_size)]
   end
   
+  def random_TLD
+    TLD[rand(TLD_SIZE)]
+  end
+  
 end
 
 if __FILE__ == $0
-  w = Whale.new(ARGV[0], ARGV[1], ARGV[2], ARGV[3], ARGV[4])
+  w = Whale.new(ARGV[0], ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5])
   w.counter_phish
 end
