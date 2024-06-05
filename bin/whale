@@ -2,7 +2,7 @@
 # whale
 
 # 20080520
-WHALE_VERSION = '0.4.4'
+WHALE_VERSION = '0.4.5'
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -12,6 +12,7 @@ WHALE_VERSION = '0.4.4'
 
 # Discussion: 
 # 1. As yesterday's site is down I've selected my next victim.  It is a PayPal phishing site and they've got some Javascript which  checks that the username conforms to being an acceptable email address.  Then I noticed that the form is not dependent on Javascript and so it could be gotton around by simply ignoring Javascript as Whale does.  However, since one of the goals is to make the real user data indistinguishable from the fake, it seems as if it is a better idea to make the data input from Whale look like the most likely set of real user data.  
+# 2. The changes from 0.4.2 were precipitated by a site which had no form name.  Although much of the changes were in addition to this particular purpose.  
 
 # Changes since 0.3: 
 # 1. I've added the option to select a user agent.  
@@ -24,13 +25,21 @@ WHALE_VERSION = '0.4.4'
 # 4
 # 7. Added in option parsing via Options and Whale.parse_options.  
 # 8. Enabled the use of this in the self-run block.  
+# 5
+# 9. Created a whole bunch of methods to abstract the process of determining the page, the form, the fields.  
+# 10. Gave @words a method.  
+# 11. Fixed the remnants of what I copied from express.  
+# 12. Made more extensive use of accessors/readers.  
+# 13. Overall much lispier.  
 
 # Todo: 
-# 1. Command line options library needed really, since fixed order options is a bit blerrr.  
+# 1. Command line options library needed really, since fixed order options is a bit blerrr.  Done as of 0.4.4, but really working as of 0.4.5.  
 
 require 'rubygems'
 require 'mechanize'
-#require 'pp'
+require 'pp'
+
+$debug = false
 
 TLD = %w{com net org edu int mil gov arpa biz aero name coop info pro museum}
 TLD_SIZE = 15
@@ -38,14 +47,15 @@ TLD_SIZE = 15
 class Options
   
   class << self
-    attr_accessor :interpreted_action, :project_path, :dbms, :dbms_host, :dbms_username, :dbms_password, :svn_uri, :svn_username, :svn_password, :verbosity, :rails_version, :project_name, :app_root, :use_edge
+    attr_accessor :form_name, :username_field_name, :password_field_name, :verbose, :username_is_email_address, :user_agent
   end
   
 end # class Options
 
 class Whale
   
-  attr_accessor :url, :form_name, :username_field_name, :password_field_name
+  attr_accessor :url
+  attr_writer :form_name, :username_field_name, :password_field_name
   attr_accessor :verbose, :username_is_email_address, :user_agent
   attr_reader :words, :words_size
   
@@ -65,22 +75,22 @@ class Whale
     op = OptionParser.new do |opts|
       opts.banner = 'Usage: whale <url> and any of the following options...'
       opts.on('-f', '--form', '--form-name', '--form_name <form_name>', "If left empty, the first form on the page will be used.") do |opt|
-        Options.dbms = opt
+        Options.form_name = opt
       end
       opts.on('-u', '--username-field-name', '--username_field_name <username_field_name>', '') do |opt|
-        Options.username = opt
+        Options.username_field_name = opt
       end
       opts.on('-p', '--dbms-password-field-name', '--dbms_password_field_name <password_field_name>', '') do |opt|
-        Options.password = opt
+        Options.password_field_name = opt
       end
       opts.on('-V', '--verbose', 'Outputs each submission as it goes.') do |opt|
-        Options.host = opt
+        Options.verbose = opt
       end
       opts.on('-e', '--username-is-email-address', '--username_is_email_address', 'Automatically generate a username which is in the form of an email address.') do |opt|
-        Options.rails_version = opt
+        Options.username_is_email_address = opt
       end
-      opts.on('-a', '--user-agent', '--user_agent', 'What webclient I should pretend to be.') do |opt|
-        Options.verbosity = opt
+      opts.on('-a', '--user-agent', '--user_agent <user_agent>', 'What webclient I should pretend to be.') do |opt|
+        Options.user_agent = opt
       end
       opts.on('-?', '--help', 'Displays this information.') do
         puts opts
@@ -100,42 +110,15 @@ class Whale
     puts "Whale session begun #{start_time}."
     submission_count = 0
     m = WWW::Mechanize.new
-    m.user_agent_alias = @user_agent
+    m.user_agent_alias = user_agent
     begin
       loop do
-        page = m.get(@url)
-        md = page.body.match(/meta.*?Refresh.*?url=(.*?)"/i)
-        if md
-          #puts 'meta_refresh_url found'
-          page = m.get(md[1])
-          #pp page  #debug
-        end
-        #pp page  #debug
-        if @form_name
-          form = page.form(@form_name)
-        else
-          form = page.forms[0]
-        end
-        if @username_is_email_address
-          username = "#{random_word}@#{random_word}.#{random_TLD}"
-        else
-          username = random_word
-        end
-        password = random_word
-        if @username_field_name
-          form[@username_field_name] = username
-        else
-          form.fields[0] = username
-        end
-        if @password_field_name
-          form[@password_field_name] = password
-        else
-          form.fields[1] = password
-        end
+        set_username_field
+        set_password_field
         m.submit(form)
-        #pp m.submit(form)  #debug
+        pp m.submit(form) if $debug
         submission_count += 1
-        puts "#{submission_count} #{username}:#{password}" if @verbose
+        puts "#{submission_count} #{username}:#{password}" if verbose
       end
     ensure
       finish_time = Time.now
@@ -143,7 +126,7 @@ class Whale
       submissions_per_minute = submission_count / time_delta_in_minutes
       puts "Whale session terminated #{finish_time} with #{submission_count} counter-phishes served in #{time_delta_in_minutes} minutes for an average of #{submissions_per_minute} submissions per minute."
     end
-  end
+  end # def counter_phish
   
   private
   
@@ -154,11 +137,63 @@ class Whale
   end
   
   def random_word
-    @words[rand(@words_size)]
+    words[rand(words_size)]
   end
   
   def random_TLD
     TLD[rand(TLD_SIZE)]
+  end
+  
+  def page # This is a big timesaver.  I think I don't need to keep grabbing the page everytime.  
+    @page ||= (
+      _page = m.get(@url)
+      md = _page.body.match(/meta.*?Refresh.*?url=(.*?)"/i)
+      if md
+        puts 'meta_refresh_url found' if $debug
+        _page = m.get(md[1])
+        pp _page if $debug
+      end
+      pp _page if $debug
+      _page
+    )
+  end
+  
+  def form # Similarly to #page.  I don't think I need to grab it everytime either.  
+    @form ||= (
+      if @form_name
+        page.form(@form_name)
+      else
+        page.forms[0]
+      end
+    )
+  end
+  
+  def username
+    if username_is_email_address
+      "#{random_word}@#{random_word}.#{random_TLD}"
+    else
+      random_word
+    end
+  end
+  
+  def password
+    random_word
+  end
+  
+  def set_username_field
+    if @username_field_name
+      form[@username_field_name] = username
+    else
+      form.fields[0] = username
+    end
+  end
+  
+  def set_password_field
+    if @password_field_name
+      form[@password_field_name] = password
+    else
+      form.fields[1] = password
+    end
   end
   
 end
