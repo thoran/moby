@@ -2,7 +2,7 @@
 # whale
 
 # 20061009
-# 0.1.2
+# 0.2.0
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -10,13 +10,14 @@
 # 1. I took #read_words_file from difflist.  
 # 2. I took a bit of RandomMethod for #random_word.   
 
-# Changes since 0.0: 
-# 1. It now has a verbose mode which will output the username and password which has been randomly generating just prior to it being submitted.  
-# 2. Rejigged the value generation stuff, since I was not outputting the value submitted, but generating a new one.  That's the problem with DSLs: one forgets what's a variable and what's a method.  
-# 3. The verbose setting wasn't being handled correctly.  
+# Changes since 0.1: 
+# 1. Added the time of script start into the output.  
+# 2. Moved the output to immediately after submission.  
+# 3. Added the count of submissions next to output of each username:password pair.  
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit blerrr.  
+# 2. Trap breaking into the loop and output stuff like the end time, total time, and total count.  
 
 require 'rubygems'
 require 'mechanize'
@@ -31,16 +32,19 @@ class Whale
   end
   
   def counter_phish
+    puts "Whale session begun at #{Time.now}."
+    submission_count = 0
     m = WWW::Mechanize.new
     loop do
       page = m.get(@url)
       #pp page  #debug
       form = page.form(@form_name)
       username, password = random_word, random_word
-      puts "#{username}:#{password}" if @verbose
       form.fields.find {|f| f.name == @username_field_name}.value = username
       form.fields.find {|f| f.name == @password_field_name}.value = password
       m.submit(form)
+      submission_count += 1
+      puts "#{submission_count} #{username}:#{password}" if @verbose
     end
   end
   
