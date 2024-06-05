@@ -71,8 +71,8 @@ class Whale
         pp result if @debug
         submission_count += 1
         puts "#{submission_count} #{username_field.value}:#{password_field.value}" if @verbose
-      rescue EOFError
-        puts "\nEOFError rescued.\n"
+      rescue Net::HTTP::Persistent::Error
+        puts "\n\nNet::HTTP::Persistent::Error rescued.\n\n"
       end
     ensure
       finish_time = Time.now
