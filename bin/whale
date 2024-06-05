@@ -1,4 +1,10 @@
 #!/usr/bin/env ruby
+# whale
+
+# 20061009
+# 0.0.1
+
+# Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
 require 'rubygems'
 require 'mechanize'
@@ -13,3 +19,26 @@ google_form = page.form('f')
 google_form.q = 'ruby mechanize'
 page = agent.submit(google_form)
 pp page
+
+
+class Whale
+  
+  def initialize(url)
+    @url = url
+  end
+  
+  def select
+    
+  end
+  
+  def (filename)
+    a = []
+    File.open(filename, "r").each {|line| a << line.chomp }
+    a
+  end
+  
+end
+
+if __FILE__ == $0
+  Whale.new(ARGV[0])
+end
