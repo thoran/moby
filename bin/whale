@@ -2,7 +2,7 @@
 # whale
 
 # 20061009
-# 0.2.3
+# 0.2.4
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -17,6 +17,7 @@
 # 4. It now attempts to trap when a break occurs to output a summary.  
 # 5. The total number of submissions is now output at the end verbose or not.  
 # 6. Added more stuff to the summary as per Todo 2.  
+# 7. The calculation of the delta of time in minutes is now correct I think.  
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit blerrr.  
@@ -53,7 +54,7 @@ class Whale
       end
     ensure
       finish_time = Time.now
-      time_delta_in_minutes = (finish_time - start_time) * 60
+      time_delta_in_minutes = (finish_time - start_time) / 60
       submissions_per_minute = submission_count/time_delta_in_minutes
       puts "Whale session terminated #{finish_time} with #{submission_count} counter-phishes served in #{time_delta_in_minutes} minutes for an average of #{submissions_per_minute} submissions per minute."
     end
