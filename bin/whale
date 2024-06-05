@@ -2,7 +2,7 @@
 # whale
 
 # 20061009
-# 0.0.7
+# 0.1.0
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -10,24 +10,20 @@
 # 1. I took #read_words_file from difflist.  
 # 2. I took a bit of RandomMethod for #random_word.   
 
-# Changes: 
-# 1. It is mostly complete now.  It should read in the words file and submit one only counter_phish.  
-# 2. I need to be able to get it to find the form field names dynamically (based on inputs) and send wouldn't do it.  So hopefully Mike's block approach has been kept by Aaron.  Fingers crossed...  
-# 3. Iteration is now placed around the form filling bits with a simple non-stop loop.  I'm expecting that I don't need to keep fetching the page once I have it; that is unless there is some kind of tracking going on.  
-# 4. Oops, I reset the value of page!  
-# 5. That didn't do it some more goes in the loop.  I don't think is right somehow, I should be able to reuse the variables
+# Changes since 0.0: 
+# 1. It now has a verbose mode which will output the username and password which has been randomly generating just prior to it being submitted.  
 
 # Todo: 
-# 1. Iterate infinitely over the @words array and hammer the fuckers.  Really done as of 0.0.7.  
+# 1. Command line options library needed really, since fixed order options is a bit bler.  
 
 require 'rubygems'
 require 'mechanize'
-require 'pp'
+#require 'pp'
 
 class Whale
   
-  def initialize(url, form_name, username_field_name, password_field_name)
-    @url, @form_name, @username_field_name, @password_field_name = url, form_name, username_field_name, password_field_name
+  def initialize(url, form_name, username_field_name, password_field_name, verbose = false)
+    @url, @form_name, @username_field_name, @password_field_name, @verbose_mode= url, form_name, username_field_name, password_field_name, verbose
     @words = read_words_file('/usr/share/dict/words')
     @words_size = @words.size # It is more efficient for this to be called once here.  
   end
@@ -36,11 +32,13 @@ class Whale
     m = WWW::Mechanize.new
     loop do
       page = m.get(@url)
-      pp page  #debug
+      #pp page  #debug
       form = page.form(@form_name)
       form.fields.find {|f| f.name == @username_field_name}.value = random_word
+      print "#{random_word}:" if @verbose
       form.fields.find {|f| f.name == @password_field_name}.value = random_word
-      pp m.submit(form)  #part_debug
+      puts "#{random_word}" if @verbose
+      m.submit(form)
     end
   end
   
@@ -59,6 +57,6 @@ class Whale
 end
 
 if __FILE__ == $0
-  w = Whale.new(ARGV[0], ARGV[1], ARGV[2], ARGV[3])
+  w = Whale.new(ARGV[0], ARGV[1], ARGV[2], ARGV[3], ARGV[4])
   w.counter_phish
 end
