@@ -161,7 +161,6 @@ class Whale
         exit
       end
     end
-    %w{form_name form_number username_field_name username_field_number password_field_name password_field_number verbose username_is_email_address user_agent}.each{|o| new_value = Options.send(o); self.send("#{o}=", new_value) if new_value}
     self
   end # def parse_options
   
