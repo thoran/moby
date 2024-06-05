@@ -152,9 +152,9 @@ class Whale
     if username_field_name
       form[username_field_name] = username
     elsif username_field_number
-      form.fields[username_field_number] = username
+      form.fields[username_field_number].value = username
     else
-      form.fields[0] = username
+      form.fields[0].value = username
     end
   end
 
@@ -162,9 +162,9 @@ class Whale
     if password_field_name
       form[password_field_name] = password
     elsif password_field_number
-      form.fields[password_field_number] = password
+      form.fields[password_field_number].value = password
     else
-      form.fields[1] = password
+      form.fields[1].value = password
     end
   end
 end

@@ -7,3 +7,7 @@
 ~ bin/whale: ~ switches(): use Whale::VERSION_STRING
 ~ lib/Whale.rb: general tidying
 + lib/File/self.collect.rb
+
+0.8.1
+~ lib/Whale: ~ set_username_field(): Fix when username field number is specified or nothing is specified.
+~ lib/Whale: ~ set_password_field(): Fix when password field number is specified or nothing is specified.
