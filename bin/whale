@@ -2,7 +2,7 @@
 # whale
 
 # 20061009
-# 0.1.1
+# 0.1.2
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -13,9 +13,10 @@
 # Changes since 0.0: 
 # 1. It now has a verbose mode which will output the username and password which has been randomly generating just prior to it being submitted.  
 # 2. Rejigged the value generation stuff, since I was not outputting the value submitted, but generating a new one.  That's the problem with DSLs: one forgets what's a variable and what's a method.  
+# 3. The verbose setting wasn't being handled correctly.  
 
 # Todo: 
-# 1. Command line options library needed really, since fixed order options is a bit bler.  
+# 1. Command line options library needed really, since fixed order options is a bit blerrr.  
 
 require 'rubygems'
 require 'mechanize'
@@ -24,7 +25,7 @@ require 'mechanize'
 class Whale
   
   def initialize(url, form_name, username_field_name, password_field_name, verbose = false)
-    @url, @form_name, @username_field_name, @password_field_name, @verbose_mode= url, form_name, username_field_name, password_field_name, verbose
+    @url, @form_name, @username_field_name, @password_field_name, @verbose = url, form_name, username_field_name, password_field_name, verbose
     @words = read_words_file('/usr/share/dict/words')
     @words_size = @words.size # It is more efficient for this to be called once here.  
   end
