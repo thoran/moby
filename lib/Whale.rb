@@ -2,9 +2,7 @@
 # Whale
 
 require 'pp'
-
 require 'mechanize'
-
 require 'File/self.collect'
 
 class Whale
@@ -66,10 +64,13 @@ class Whale
         set_user_agent
         set_username_field
         set_password_field
+        pp page if @debug
         result = mechanize.submit(form)
         pp result if @debug
         submission_count += 1
         puts "#{submission_count} #{username}:#{password}" if @verbose
+      rescue EOFError
+        puts "\nEOFError rescued.\n"
       end
     ensure
       finish_time = Time.now
@@ -107,7 +108,6 @@ class Whale
       if md
         puts 'meta_refresh_url found' if @debug
         _page = mechanize.get(md[1])
-        pp _page if @debug
       end
       pp _page if @debug
       _page
@@ -154,9 +154,9 @@ class Whale
     if username_field_name
       form[username_field_name] = username
     elsif username_field_number
-      form.fields[username_field_number] = username
+      form.fields[username_field_number].value = username
     else
-      form.fields[0] = username
+      form.fields[0].value = username
     end
   end
 
@@ -164,9 +164,9 @@ class Whale
     if password_field_name
       form[password_field_name] = password
     elsif password_field_number
-      form.fields[password_field_number] = password
+      form.fields[password_field_number].value = password
     else
-      form.fields[1] = password
+      form.fields[1].value = password
     end
   end
 
