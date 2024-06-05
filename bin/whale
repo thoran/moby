@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # whale
 
-# 20080520
-WHALE_VERSION = '0.4.6'
+# 20080521
+WHALE_VERSION = '0.4.7'
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -20,7 +20,7 @@ WHALE_VERSION = '0.4.6'
 # 3. I've removed the debugging stuff.  
 # 4. There was an error if there was no meta refresh of course!  So now it doesn't attempt to access the match data array unless there's something in it.  
 # 3
-# 5. Somtimes a form won't have a name, so I need to just grab the first one or a subsequent one if need be...  
+# 5. Sometimes a form won't have a name, so I need to just grab the first one or a subsequent one if need be...  
 # 6. Added a hash to pass in options to Whale.initialize.  
 # 4
 # 7. Added in option parsing via Options and Whale.parse_options.  
@@ -37,11 +37,23 @@ WHALE_VERSION = '0.4.6'
 # 16. Defaults for Whale#initialize.  
 # 17. require 'optparse'!  
 # 18. A few option parsing and variable setting tidyups.  
-# 19. Fixed a problem with the mechanize instance not being found, so it is now an instanc variable.  
+# 19. Fixed a problem with the mechanize instance not being found, so it is now an instance variable.  
+# 7
+# 20. The username and password fields can be identified by number/order within a form now.  
+# 21. Numerous methods now return self.  It's a bit nicer and allows for chaining...  I don't know if I WANT to use it, but its there if I do.  
+# 22. Dropped in File.collect for fun (well actually I wrote it for this, cause it looks nicer), for use in Whale#read_words_file.  
+# 23. Made the file handling stuff lispier.  
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit blerrr.  Done as of 0.4.4, but really working as of 0.4.5.  
-# 2. Be able to set the username and password fields by number.  
+# 2. Be able to set the username and password fields by number.  Done as of 0.4.7.  
+# 3. On-the-fly randomly generated passwords.  
+
+# Roadmap:
+# 0.5.x will have automated hooks into dslreports.com/phishtrack.  
+# 0.6.x will have a generalised interface into hooking in phishing databases and will have one or two additional databases.  
+# 0.7.x will offer threading for maximum throughput!  
+# 0.8.x will optionally randomize submission frequency, such that a maximum and a minimum number of submissions can be set per period.  
 
 require 'rubygems'
 require 'mechanize'
@@ -54,10 +66,23 @@ $debug = false
 TLD = %w{com net org edu int mil gov arpa biz aero name coop info pro museum}
 TLD_SIZE = 15
 
+class File
+  
+  def self.collect(filename, &block)
+    a = []
+    File.open(filename, 'r').each{|line| a << block.call(line)}
+    a
+  end
+  
+end
+
 class Options
   
   class << self
-    attr_accessor :form_name, :form_number, :username_field_name, :password_field_name, :verbose, :username_is_email_address, :user_agent
+    attr_accessor :form_name, :form_number
+    attr_accessor :username_field_name, :username_field_number
+    attr_accessor :password_field_name, :password_field_number
+    attr_accessor :verbose, :username_is_email_address, :user_agent
   end
   
 end # class Options
@@ -65,25 +90,30 @@ end # class Options
 class Whale
   
   attr_accessor :url
-  attr_accessor :form_name, :form_number, :username_field_name, :password_field_name
+  attr_accessor :form_name, :form_number
+  attr_accessor :username_field_name, :username_field_number
+  attr_accessor :password_field_name, :password_field_number
   attr_accessor :verbose, :username_is_email_address, :user_agent
-  attr_reader :words, :words_size
+  attr_reader :words_size
   
   def initialize(url = nil, options = {})
     @url = url
     @form_name = options[:form_name] || nil
+    @form_number = options[:form_number] || nil
     @username_field_name = options[:username_fieldname] || nil
+    @username_field_number = options[:username_field_number] || nil
     @password_field_name = options[:password_field_name] || nil
+    @password_field_number = options[:password_field_number] || nil
     @verbose = options[:verbose] || false
     @username_is_email_address = options[:username_is_email_address] || false
     @user_agent = options[:user_agent] || 'Windows IE 6'
-    @words = read_words_file('/usr/share/dict/words')
-    @words_size = @words.size # It is more efficient for this to be called once here.  
+    @words_size = words.size # It is more efficient for this to be called once here.  
   end
   
   def parse
     parse_url
     parse_options
+    self
   end
   
   def parse_url
@@ -92,22 +122,29 @@ class Whale
     else
       raise RuntimeError, 'No URL provided.'
     end
+    self
   end
   
   def parse_options
     op = OptionParser.new do |opts|
       opts.banner = 'Usage: whale <url> and any of the following options...'
-      opts.on('-f', '--form', '--form-name', '--form_name <form_name>', "If left empty, the first form on the page will be used.") do |opt|
+      opts.on('-f', '--form', '--form-name', '--form_name <form_name>', 'If left empty, the first form on the page will be used.') do |opt|
         Options.form_name = opt
       end
-      opts.on('-n', '--form-number', '--form_number <form_number>', "This will set the number of the form in order of appearance on the page.  Use zero-based indexing...") do |opt|
+      opts.on('-n', '--form-number', '--form_number <form_number>', 'This will set the number of the form in order of appearance on the page.  Use zero-based indexing.') do |opt|
         Options.form_number = opt
       end
-      opts.on('-u', '--username-field-name', '--username_field_name <username_field_name>', '') do |opt|
+      opts.on('-u', '--username-field-name', '--username_field_name <username_field_name>', 'The name of the username field.') do |opt|
         Options.username_field_name = opt
       end
-      opts.on('-p', '--password-field-name', '--password_field_name <password_field_name>', '') do |opt|
+      opts.on('-u', '--username-field-number', '--username_field_number <username_field_number>', 'The position of the username field in relation to the form it is attached to.  Use zero-based indexing.') do |opt|
+        Options.username_field_number = opt
+      end
+      opts.on('-p', '--password-field-name', '--password_field_name <password_field_name>', 'The name of the password field.') do |opt|
         Options.password_field_name = opt
+      end
+      opts.on('-p', '--password-field-number', '--password_field_number <password_field_number>', 'The position of the password field in relation to the form it is attached to.  Use zero-based indexing.') do |opt|
+        Options.password_field_number = opt
       end
       opts.on('-V', '--verbose', 'Outputs each submission as it goes.') do |opt|
         Options.verbose = opt
@@ -128,7 +165,8 @@ class Whale
       end
     end
     op.parse!
-    %w{form_name form_number username_field_name password_field_name verbose username_is_email_address user_agent}.each{|o| new_value = Options.send(o); self.send("#{o}=", new_value) if new_value}
+    %w{form_name form_number username_field_name username_field_number password_field_name password_field_number verbose username_is_email_address user_agent}.each{|o| new_value = Options.send(o); self.send("#{o}=", new_value) if new_value}
+    self
   end # def parse_options
   
   def counter_phish
@@ -156,10 +194,8 @@ class Whale
   
   private
   
-  def read_words_file(filename)
-    a = []
-    File.open(filename, 'r').each {|line| a << line.chomp }
-    a
+  def words(filename = '/usr/share/dict/words')
+    @words ||= File.collect(filename){|line| line.chomp}
   end
   
   def random_word
@@ -184,7 +220,7 @@ class Whale
     )
   end
   
-  def form # Similarly to #page.  I don't think I need to grab it everytime either.  
+  def form # Similarly to #page.  I don't think I need to grab the form everytime either.  
     @form ||= (
       if form_name
         page.form(form_name)
@@ -211,6 +247,8 @@ class Whale
   def set_username_field
     if username_field_name
       form[username_field_name] = username
+    elsif username_field_number
+      form.fields[username_field_number] = username
     else
       form.fields[0] = username
     end
@@ -219,6 +257,8 @@ class Whale
   def set_password_field
     if password_field_name
       form[password_field_name] = password
+    elsif password_field_number
+      form.fields[password_field_number] = password
     else
       form.fields[1] = password
     end
