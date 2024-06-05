@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # whale
 
-# 20080829
-WHALE_VERSION = '0.4.8'
+# 20080521
+WHALE_VERSION = '0.5.0'
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -14,37 +14,8 @@ WHALE_VERSION = '0.4.8'
 # 1. As yesterday's site is down I've selected my next victim.  It is a PayPal phishing site and they've got some Javascript which  checks that the username conforms to being an acceptable email address.  Then I noticed that the form is not dependent on Javascript and so it could be gotton around by simply ignoring Javascript as Whale does.  However, since one of the goals is to make the real user data indistinguishable from the fake, it seems as if it is a better idea to make the data input from Whale look like the most likely set of real user data.  
 # 2. The changes from 0.4.2 were precipitated by a site which had no form name.  Although much of the changes were in addition to this particular purpose.  
 
-# Changes since 0.3: 
-# 1. I've added the option to select a user agent.  
-# 2. I've also added the option to be able to follow meta-refresh links.  Neat!  I can test it on that PayPal phishing site which necessitated, or at least had recommended, having email addresses, since it used a meta-refresh.  
-# 3. I've removed the debugging stuff.  
-# 4. There was an error if there was no meta refresh of course!  So now it doesn't attempt to access the match data array unless there's something in it.  
-# 3
-# 5. Sometimes a form won't have a name, so I need to just grab the first one or a subsequent one if need be...  
-# 6. Added a hash to pass in options to Whale.initialize.  
-# 4
-# 7. Added in option parsing via Options and Whale.parse_options.  
-# 8. Enabled the use of this in the self-run block.  
-# 5
-# 9. Created a whole bunch of methods to abstract the process of determining the page, the form, the fields.  
-# 10. Gave @words a method.  
-# 11. Fixed the remnants of what I copied from express.  
-# 12. Made more extensive use of accessors/readers.  
-# 13. Overall much lispier.  
-# 6
-# 14. I can now set which form to be used by a zero-based index via form_number.  
-# 15. Forgot to do command line parsing of the URL!  
-# 16. Defaults for Whale#initialize.  
-# 17. require 'optparse'!  
-# 18. A few option parsing and variable setting tidyups.  
-# 19. Fixed a problem with the mechanize instance not being found, so it is now an instance variable.  
-# 7
-# 20. The username and password fields can be identified by number/order within a form now.  
-# 21. Numerous methods now return self.  It's a bit nicer and allows for chaining...  I don't know if I WANT to use it, but its there if I do.  
-# 22. Dropped in File.collect for fun (well actually I wrote it for this, cause it looks nicer), for use in Whale#read_words_file.  
-# 23. Made the file handling stuff lispier.  
-# 8
-# 24. I had overlapping short command line option switches for username and password field names and numbers, such that the latter overwrites the former...  
+# Changes since 0.4: 
+# 1. 
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit blerrr.  Done as of 0.4.4, but really working as of 0.4.5.  
@@ -60,7 +31,6 @@ WHALE_VERSION = '0.4.8'
 require 'rubygems'
 require 'mechanize'
 
-require 'optparse'
 require 'pp'
 
 $debug = false
@@ -78,19 +48,41 @@ class File
   
 end
 
-class Options
+require 'optparse'
+require 'ostruct'
+
+class Options < OpenStruct
   
-  class << self
-    attr_accessor :form_name, :form_number
-    attr_accessor :username_field_name, :username_field_number
-    attr_accessor :password_field_name, :password_field_number
-    attr_accessor :verbose, :username_is_email_address, :user_agent
+  def initialize
+    @op = OptionParser.new
+    yield self if block_given?
+    parse if block_given?
+    super
+  end
+  
+  def set(attr, *opts, &block)
+    @op.on(opts, block) do |opt|
+      self.send(attr.to_s + '=', opt)
+    end
+  end
+  
+  def on(*opts, &block)
+    @op.on(opts, block)
+  end
+  
+  def banner=(s)
+    @op.banner = s
+  end
+  
+  def parse!
+    @op.parse!
   end
   
 end # class Options
 
 class Whale
   
+  attr_accessor :options
   attr_accessor :url
   attr_accessor :form_name, :form_number
   attr_accessor :username_field_name, :username_field_number
@@ -128,34 +120,37 @@ class Whale
   end
   
   def parse_options
-    op = OptionParser.new do |opts|
+    op = Options.new do |opts|
       opts.banner = 'Usage: whale <url> and any of the following options...'
-      opts.on('-f', '--form', '--form-name', '--form_name <form_name>', 'If left empty, the first form on the page will be used.') do |opt|
-        Options.form_name = opt
-      end
+      opts.set(:form_name, '-f', '--form', '--form-name', '--form_name <form_name>', 'If left empty, the first form on the page will be used.')
+      self.class.send(:attr_accessor, :form_name)
+      self.class.send(:form_name=, op.form_name)
       opts.on('-n', '--form-number', '--form_number <form_number>', 'This will set the number of the form in order of appearance on the page.  Use zero-based indexing.') do |opt|
-        Options.form_number = opt
+        send(:attr_accessor, :form_number)
+        opts.form_number = opt
       end
       opts.on('-u', '--username-field-name', '--username_field_name <username_field_name>', 'The name of the username field.') do |opt|
-        Options.username_field_name = opt
+        send(:attr_accessor, :username_field_name)
+        username_field_name = opt
       end
-      opts.on('--username-field-number', '--username_field_number <username_field_number>', 'The position of the username field in relation to the form it is attached to.  Use zero-based indexing.') do |opt|
-        Options.username_field_number = opt
+      opts.on('-u', '--username-field-number', '--username_field_number <username_field_number>', 'The position of the username field in relation to the form it is attached to.  Use zero-based indexing.') do |opt|
+        send(:attr_accessor, :username_field_number)
+        username_field_number = opt
       end
       opts.on('-p', '--password-field-name', '--password_field_name <password_field_name>', 'The name of the password field.') do |opt|
-        Options.password_field_name = opt
+        opts.password_field_name = opt
       end
-      opts.on('--password-field-number', '--password_field_number <password_field_number>', 'The position of the password field in relation to the form it is attached to.  Use zero-based indexing.') do |opt|
-        Options.password_field_number = opt
+      opts.on('-p', '--password-field-number', '--password_field_number <password_field_number>', 'The position of the password field in relation to the form it is attached to.  Use zero-based indexing.') do |opt|
+        opts.password_field_number = opt
       end
       opts.on('-V', '--verbose', 'Outputs each submission as it goes.') do |opt|
-        Options.verbose = opt
+        opts.verbose = opt
       end
       opts.on('-e', '--username-is-email-address', '--username_is_email_address', 'Automatically generate a username which is in the form of an email address.') do |opt|
-        Options.username_is_email_address = opt
+        opts.username_is_email_address = opt
       end
       opts.on('-a', '--user-agent', '--user_agent <user_agent>', 'What webclient I should pretend to be.') do |opt|
-        Options.user_agent = opt
+        opts.user_agent = opt
       end
       opts.on('-?', '--help', 'Displays this information.') do
         puts opts
@@ -166,7 +161,6 @@ class Whale
         exit
       end
     end
-    op.parse!
     %w{form_name form_number username_field_name username_field_number password_field_name password_field_number verbose username_is_email_address user_agent}.each{|o| new_value = Options.send(o); self.send("#{o}=", new_value) if new_value}
     self
   end # def parse_options
