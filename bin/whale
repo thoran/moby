@@ -2,7 +2,7 @@
 # whale
 
 # 20061009
-# 0.0.1
+# 0.0.2
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -10,35 +10,48 @@ require 'rubygems'
 require 'mechanize'
 require 'pp'
 
-agent = WWW::Mechanize.new
-page = agent.get('http://google.com/')
-
-pp page
-
-google_form = page.form('f')
-google_form.q = 'ruby mechanize'
-page = agent.submit(google_form)
-pp page
-
-
 class Whale
   
-  def initialize(url)
-    @url = url
+  def initialize(url, form_name, username_field_name, password_field_name)
+    @url, @form_name, @username_field_name, @password_field_name = url, form_name, username_field_name, password_field_name
+    @words = read_words_file('/usr/share/dict/words')
   end
   
-  def select
-    
+  def counter_phish
+    m = WWW::Mechanize.new
+    page = m.get(@url)
+    form = page.form(@form_name)
+    form.send(@username_field_name) = random_word
+    form.send(@password_field_name) = random_word
+    page = m.submit(form)
   end
   
-  def (filename)
+  private
+  
+  def read_words_file(filename)
     a = []
     File.open(filename, "r").each {|line| a << line.chomp }
     a
   end
   
+  def random
+  end
+  
 end
 
 if __FILE__ == $0
-  Whale.new(ARGV[0])
+  w = Whale.new(ARGV[0], ARGV[1], ARGV[2], ARGV[3])
+  w.counter_phish
+end
+
+module RandomMethod
+  def random_method
+    begin
+      methods = self.methods
+      random_method = methods[rand(methods.size)]
+      self.send(random_method)
+    rescue
+      random_method
+    end
+  end
 end
