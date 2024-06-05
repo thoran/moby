@@ -73,6 +73,8 @@ class Whale
         puts "#{submission_count} #{username_field.value}:#{password_field.value}" if @verbose
       rescue Net::HTTP::Persistent::Error
         puts "\n\nNet::HTTP::Persistent::Error rescued.\n\n"
+      rescue Net::OpenTimeout
+        puts "\n\nNet::OpenTimeout rescued.\n\n"
       end
     ensure
       finish_time = Time.now
