@@ -1,8 +1,8 @@
 # File/self.collect.rb
-# File.collect.rb
+# File.collect
 
-# 20190821
-# 0.2.0
+# 20200111
+# 0.2.1
 
 # Changes:
 # 1. + Thoran::File::SelfCollect namespace.
