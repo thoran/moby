@@ -2,7 +2,7 @@
 # whale
 
 # 20061009
-# 0.4.0
+# 0.4.1
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -16,13 +16,14 @@
 # Changes since 0.3: 
 # 1. I've added the option to select a user agent.  
 # 2. I've also added the option to be able to follow meta-refresh links.  Neat!  I can test it on that PayPal phishing site which necessitated, or at least had recommended, having email addresses, since it used a meta-refresh.  
+# 3. I've removed the debugging stuff.  
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit blerrr.  
 
 require 'rubygems'
 require 'mechanize'
-require 'pp'
+#require 'pp'
 
 TLD = %w{com net org edu int mil gov arpa biz aero name coop info pro museum}
 TLD_SIZE = 15
@@ -45,11 +46,11 @@ class Whale
       loop do
         page = m.get(@url)
         if meta_refresh_url = page.body.match(/meta.*?Refresh.*?url=(.*?)"/i)[1]
-          puts 'meta_refresh_url found'
+          #puts 'meta_refresh_url found'
           page = m.get(meta_refresh_url)
-          pp page  #debug
+          #pp page  #debug
         end
-        pp page  #debug
+        #pp page  #debug
         form = page.form(@form_name)
         if @username_is_email_address
           username = "#{random_word}@#{random_word}.#{random_TLD}"
@@ -59,7 +60,8 @@ class Whale
         password = random_word
         form[@username_field_name] = username
         form[@password_field_name] = password
-        pp m.submit(form)  #part-debug
+        m.submit(form)
+        #pp m.submit(form)  #debug
         submission_count += 1
         puts "#{submission_count} #{username}:#{password}" if @verbose
       end
