@@ -2,7 +2,7 @@
 # whale
 
 # 20190819
-# 0.7.1
+# 0.7.2
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.
 
@@ -12,7 +12,7 @@ $LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
 require 'Switches'
 require 'Whale'
 
-VERSION_STRING = '0.7.1'
+VERSION_STRING = '0.7.2'
 
 def switches
   Switches.new do |s|
