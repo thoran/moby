@@ -2,7 +2,7 @@
 # whale
 
 # 20080520
-# 0.4.3
+WHALE_VERSION = '0.4.4'
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.  
 
@@ -21,6 +21,9 @@
 # 3
 # 5. Somtimes a form won't have a name, so I need to just grab the first one or a subsequent one if need be...  
 # 6. Added a hash to pass in options to Whale.initialize.  
+# 4
+# 7. Added in option parsing via Options and Whale.parse_options.  
+# 8. Enabled the use of this in the self-run block.  
 
 # Todo: 
 # 1. Command line options library needed really, since fixed order options is a bit blerrr.  
@@ -32,6 +35,14 @@ require 'mechanize'
 TLD = %w{com net org edu int mil gov arpa biz aero name coop info pro museum}
 TLD_SIZE = 15
 
+class Options
+  
+  class << self
+    attr_accessor :interpreted_action, :project_path, :dbms, :dbms_host, :dbms_username, :dbms_password, :svn_uri, :svn_username, :svn_password, :verbosity, :rails_version, :project_name, :app_root, :use_edge
+  end
+  
+end # class Options
+
 class Whale
   
   attr_accessor :url, :form_name, :username_field_name, :password_field_name
@@ -39,16 +50,50 @@ class Whale
   attr_reader :words, :words_size
   
   def initialize(url, options)
-    @url = url
+    @url = url || nil
     @form_name = options[:form_name] || nil
-    @username_field_name = options[:username_fieldname] || 'username'
-    @password_field_name = options[:password_field_name] || 'password'
+    @username_field_name = options[:username_fieldname] || nil
+    @password_field_name = options[:password_field_name] || nil
     @verbose = options[:verbose] || false
     @username_is_email_address = options[:username_is_email_address] || false
     @user_agent = options[:user_agent] || 'Windows IE 6'
     @words = read_words_file('/usr/share/dict/words')
     @words_size = @words.size # It is more efficient for this to be called once here.  
   end
+  
+  def parse_options
+    op = OptionParser.new do |opts|
+      opts.banner = 'Usage: whale <url> and any of the following options...'
+      opts.on('-f', '--form', '--form-name', '--form_name <form_name>', "If left empty, the first form on the page will be used.") do |opt|
+        Options.dbms = opt
+      end
+      opts.on('-u', '--username-field-name', '--username_field_name <username_field_name>', '') do |opt|
+        Options.username = opt
+      end
+      opts.on('-p', '--dbms-password-field-name', '--dbms_password_field_name <password_field_name>', '') do |opt|
+        Options.password = opt
+      end
+      opts.on('-V', '--verbose', 'Outputs each submission as it goes.') do |opt|
+        Options.host = opt
+      end
+      opts.on('-e', '--username-is-email-address', '--username_is_email_address', 'Automatically generate a username which is in the form of an email address.') do |opt|
+        Options.rails_version = opt
+      end
+      opts.on('-a', '--user-agent', '--user_agent', 'What webclient I should pretend to be.') do |opt|
+        Options.verbosity = opt
+      end
+      opts.on('-?', '--help', 'Displays this information.') do
+        puts opts
+        exit
+      end
+      opts.on('-v', '--version', 'Displays version information.') do
+        puts "whale #{WHALE_VERSION}"
+        exit
+      end
+    end
+    op.parse!
+    %w{url form_name, user_field_name, password_field_name, verbose, username_is_email_address, user_agent}.each{|o| self.send("#{o}=", Options.o) if Options.o}
+  end # def parse_options
   
   def counter_phish
     start_time = Time.now
@@ -77,8 +122,16 @@ class Whale
           username = random_word
         end
         password = random_word
-        form[@username_field_name] = username
-        form[@password_field_name] = password
+        if @username_field_name
+          form[@username_field_name] = username
+        else
+          form.fields[0] = username
+        end
+        if @password_field_name
+          form[@password_field_name] = password
+        else
+          form.fields[1] = password
+        end
         m.submit(form)
         #pp m.submit(form)  #debug
         submission_count += 1
@@ -111,6 +164,7 @@ class Whale
 end
 
 if __FILE__ == $0
-  w = Whale.new(ARGV[0], ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6])
+  w = Whale.new
+  w.parse_options
   w.counter_phish
 end
