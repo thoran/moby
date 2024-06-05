@@ -1,16 +1,13 @@
-# Moby.rb
-# Moby
+# Whale.rb
+# Whale
 
-lib_dir = File.expand_path(File.join('..', 'lib'))
-$LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
-
-require 'File/self.collect'
 require 'mechanize'
 require 'pp'
+require_relative 'File/self.collect'
 
-class Moby
-
+class Whale
   TLD = %w{com net org edu int mil gov arpa biz aero name coop info pro museum}
+  VERSION_STRING = '0.8.0'
 
   attr_accessor\
     :debug,
@@ -19,14 +16,12 @@ class Moby
     :password_field_name,
     :password_field_number,
     :url,
+    :user_agent,
     :username_field_name,
     :username_field_number,
     :username_hostname,
     :username_is_email_address,
     :verbose
-
-  attr_writer\
-    :user_agent
 
   def initialize(
     debug: false,
@@ -39,7 +34,7 @@ class Moby
     username_field_name: 'username',
     username_field_number: 0,
     username_hostname: nil,
-    username_is_email_address: nil,
+    username_is_email_address: false,
     verbose: false
   )
     @debug = debug
@@ -62,28 +57,23 @@ class Moby
 
   def counter_phish
     start_time = Time.now
-    puts "Moby session begun #{start_time}."
+    puts "whale session begun #{start_time}."
     submission_count = 0
     begin
       loop do
-        mechanize.user_agent_alias = user_agent
-        username_field.value = username
-        password_field.value = password
-        pp page if @debug
+        set_user_agent
+        set_username_field
+        set_password_field
         result = mechanize.submit(form)
         pp result if @debug
         submission_count += 1
-        puts "#{submission_count} #{username_field.value}:#{password_field.value}" if @verbose
-      rescue Net::HTTP::Persistent::Error
-        puts "\n\nNet::HTTP::Persistent::Error rescued.\n\n" if @verbose
-      rescue Net::OpenTimeout
-        puts "\n\nNet::OpenTimeout rescued.\n\n" if @verbose
+        puts "#{submission_count} #{username}:#{password}" if @verbose
       end
     ensure
       finish_time = Time.now
       time_delta_in_minutes = (finish_time - start_time) / 60
       submissions_per_minute = submission_count / time_delta_in_minutes
-      puts "Moby session terminated #{finish_time} with #{submission_count} counter-phishes served in #{time_delta_in_minutes} minutes for an average of #{submissions_per_minute} submissions per minute."
+      puts "Whale session terminated #{finish_time} with #{submission_count} counter-phishes served in #{time_delta_in_minutes} minutes for an average of #{submissions_per_minute} submissions per minute."
     end
   end
 
@@ -110,14 +100,15 @@ class Moby
 
   def page
     @page ||= (
-      _page = mechanize.get(@url)
-      md = _page.body.match(/meta.*?Refresh.*?url=(.*?)"/i)
+      page = mechanize.get(@url)
+      md = page.body.match(/meta.*?Refresh.*?url=(.*?)"/i)
       if md
         puts 'meta_refresh_url found' if @debug
-        _page = mechanize.get(md[1])
+        page = mechanize.get(md[1])
+        pp_page if @debug
       end
-      pp _page if @debug
-      _page
+      pp page if @debug
+      page
     )
   end
 
@@ -134,7 +125,7 @@ class Moby
   end
 
   def username
-    if username_is_email_address?
+    if username_is_email_address
       if username_hostname
         "#{random_word}@#{username_hostname}"
       else
@@ -149,32 +140,31 @@ class Moby
     random_word
   end
 
-  def user_agent
-    @user_agent || random_user_agent
-  end
-
-  def username_field
-    if @username_field_name
-      form.field(@username_field_name)
-    elsif @username_field_number
-      form.fields[@username_field_number]
+  def set_user_agent
+    if @user_agent
+      mechanize.user_agent_alias = @user_agent
     else
-      form.fields[0]
+      mechanize.user_agent_alias = random_user_agent
     end
   end
 
-  def password_field
-    if @password_field_name
-      form.field(@password_field_name)
-    elsif @password_field_number
-      form.fields[@password_field_number]
+  def set_username_field
+    if username_field_name
+      form[username_field_name] = username
+    elsif username_field_number
+      form.fields[username_field_number] = username
     else
-      form.fields[1]
+      form.fields[0] = username
     end
   end
 
-  def username_is_email_address?
-    @username_is_email_address || @username_hostname || username_field.name == 'email'
+  def set_password_field
+    if password_field_name
+      form[password_field_name] = password
+    elsif password_field_number
+      form.fields[password_field_number] = password
+    else
+      form.fields[1] = password
+    end
   end
-
 end

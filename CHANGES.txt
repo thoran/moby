@@ -1,0 +1,9 @@
+0.8.0
++ README.md
++ CHANGES.txt
++ Gemfile
+~ bin/whale: ~ main(): - args (unnecessary)
+~ bin/whale VERSION_STRING --> lib/Whale::VERSION_STRING
+~ bin/whale: ~ switches(): use Whale::VERSION_STRING
+~ lib/Whale.rb: general tidying
++ lib/File/self.collect.rb
