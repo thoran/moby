@@ -11,3 +11,6 @@
 0.8.1
 ~ lib/Whale: ~ set_username_field(): Fix when username field number is specified or nothing is specified.
 ~ lib/Whale: ~ set_password_field(): Fix when password field number is specified or nothing is specified.
+
+0.9.0
+Merged the 2019 0.8.0 version of moby with the 2023 0.8.1 version of whale.

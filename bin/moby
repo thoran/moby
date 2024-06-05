@@ -1,16 +1,16 @@
 #!/usr/bin/env ruby
-# whale
+# moby
 
-# 20231204, 06
-# 0.8.1
+# 20240605
+# 0.9.0
 
 # Description: Sometimes when they go fishing, they get a whale and it sinks their boat.
 
 lib_dir = File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
 
-require 'Switches'
-require 'Whale'
+require 'Moby'
+require 'switches.rb'
 
 def switches
   Switches.new do |s|
@@ -29,26 +29,39 @@ def switches
     s.set(:username_hostname){'The hostname to be used when the username is an email address.'}
     s.set(:username_prefilled){'No need to supply an email address in the form.'}
     s.set(:v?, :verbose?){'Outputs each submission as it goes.'}
-    s.set(:version){Whale::VERSION_STRING}
+    s.set(:version){Moby::VERSION_STRING}
   end
 end
 
 def main
-  whale = Whale.new(
-    debug: switches.debug?,
-    form_name: switches.form_name,
-    form_number: switches.form_number,
-    password_field_name: switches.password_field_name,
-    password_field_number: switches.password_field_number,
-    url: switches.url,
-    user_agent: switches.user_agent,
-    username_field_name: switches.username_field_name,
-    username_field_number: switches.username_field_number,
-    username_hostname: switches.username_hostname,
-    username_is_email_address: switches.username_is_email_address,
-    verbose: switches.verbose
+  args = switches.to_h
+  debug = args[:debug?]
+  form_name = args[:form_name]
+  form_number = args[:form_number]
+  password_field_name = args[:password_field_name]
+  password_field_number = args[:password_field_number]
+  url = args[:url]
+  user_agent = args[:user_agent]
+  username_field_name = args[:username_field_name]
+  username_field_number = args[:username_field_number]
+  username_hostname = args[:username_hostname]
+  username_is_email_address = args[:username_is_email_address?]
+  verbose = args[:verbose?]
+  moby = Moby.new(
+    debug: debug,
+    form_name: form_name,
+    form_number: form_number,
+    password_field_name: password_field_name,
+    password_field_number: password_field_number,
+    url: url,
+    user_agent: user_agent,
+    username_field_name: username_field_name,
+    username_field_number: username_field_number,
+    username_hostname: username_hostname,
+    username_is_email_address: username_is_email_address,
+    verbose: verbose
   )
-  whale.counter_phish
+  moby.counter_phish
 end
 
 main
