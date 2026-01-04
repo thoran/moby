@@ -14,3 +14,7 @@
 
 0.9.0
 Merged the 2019 0.8.0 version of moby with the 2023 0.8.1 version of whale.
+
+0.9.1
+~ README.md: Fix syntax errors.
+~ lib/Moby.rb: VERSION_STRING: /0.9.0/0.9.1/
