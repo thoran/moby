@@ -7,7 +7,7 @@ require_relative 'File/self.collect'
 
 class Moby
   TLD = %w{com net org edu int mil gov arpa biz aero name coop info pro museum}
-  VERSION_STRING = '0.9.0'
+  VERSION_STRING = '0.9.1'
 
   attr_accessor\
     :debug,

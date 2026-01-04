@@ -86,7 +86,7 @@ This selects the second form on the page (using zero-based indexing) and uses th
   moby = Moby.new(
     url: 'https://phishing.site',
     form_number: 1,
-    username_field_number: 0
+    username_field_number: 0,
     password_field_number: 1,
   )
   moby.counter_phish
@@ -105,7 +105,7 @@ This is equivalent to:
   moby = Moby.new(
     url: 'https://phishing.site',
     form_number: 0,
-    username_field_number: 0
+    username_field_number: 0,
     password_field_number: 1,
   )
   moby.counter_phish
