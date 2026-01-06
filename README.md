@@ -1,8 +1,15 @@
 # moby
 
+![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
+![Status](https://img.shields.io/badge/status-stable-brightgreen.svg)
+
 ## Description
 
-Sometimes when they go fishing, they get a whale and it sinks their boat.
+"Sometimes when they go fishing, they get a whale and it sinks their boat."
+
+Moby is a credentials poisoning tool which floods phishing forms with fake credentials. When phishing operations collect data, the overwhelming volume of fake credentials makes the collected data worthless.
+
+Use responsibly. Only target confirmed phishing sites.
 
 ## Installation
 
@@ -10,14 +17,34 @@ Sometimes when they go fishing, they get a whale and it sinks their boat.
 1. Some version of Ruby.
 2. \*nix, so that it has access to /usr/share/dict/words.
 
-### 1. via Homebrew
+### 1. via RubyGems
+```shell
+$ gem install moby.rb
+```
+
+### 2. via Bundler
+Add to your Gemfile:
+```ruby
+gem 'moby.rb'
+```
+
+Then run:
+```shell
+$ bundle install
+```
+
+### 3. via Homebrew
 ```shell
 $ brew tap thoran/tap
 $ brew install thoran/tap/moby
 ```
-### 2. via git
+
+### 4. via git
 ```shell
 $ git clone git@github.com:thoran/moby.git
+$ cd moby
+$ bundle install
+$ rake test
 ```
 
 ## Usage
@@ -70,58 +97,68 @@ Note that `username_hostname` is useful only if `username_is_email_address` is t
 
 #### 1. Specify form name and field names
 ```ruby
-  moby = Moby.new(
-    url: 'https://phishing.site',
-    form_name: 'form-name',
-    username_field_name: 'login',
-    password_field_name: 'password'
-  )
-  moby.counter_phish
+require 'moby'
+
+moby = Moby.new(
+  url: 'https://phishing.site',
+  form_name: 'form-name',
+  username_field_name: 'login',
+  password_field_name: 'password'
+)
+moby.counter_phish
 ```
 
 #### 2. Specify form number and field numbers
 This selects the second form on the page (using zero-based indexing) and uses the first and second fields therein:
 
 ```ruby
-  moby = Moby.new(
-    url: 'https://phishing.site',
-    form_number: 1,
-    username_field_number: 0,
-    password_field_number: 1,
-  )
-  moby.counter_phish
+require 'moby'
+
+moby = Moby.new(
+  url: 'https://phishing.site',
+  form_number: 1,
+  username_field_number: 0,
+  password_field_number: 1,
+)
+moby.counter_phish
 ```
 
 #### 3. Specify nothing but the URL
 ```ruby
-  moby = Moby.new(
-    url: 'https://phishing.site',
-  )
-  moby.counter_phish
+require 'moby'
+
+moby = Moby.new(
+  url: 'https://phishing.site',
+)
+moby.counter_phish
 ```
 This is equivalent to:
 
 ```ruby
-  moby = Moby.new(
-    url: 'https://phishing.site',
-    form_number: 0,
-    username_field_number: 0,
-    password_field_number: 1,
-  )
-  moby.counter_phish
+require 'moby'
+
+moby = Moby.new(
+  url: 'https://phishing.site',
+  form_number: 0,
+  username_field_number: 0,
+  password_field_number: 1,
+)
+moby.counter_phish
 ```
 
 #### 4. With other options
 ```ruby
-  moby = Moby.new(
-    url: 'https://phishing.site',
-    debug: true,
-    user_agent: 'Mozilla/5.0',
-    username_hostname: 'mydomain.com', # Only useful if username_is_email_address is true.
-    username_is_email_address: true,
-    verbose: true
-  )
-  moby.counter_phish
+require 'moby'
+
+moby = Moby.new(
+  url: 'https://phishing.site',
+  debug: true,
+  user_agent: 'Mozilla/5.0',
+  username_hostname: 'mydomain.com', # Only useful if username_is_email_address is true.
+  username_is_email_address: true,
+  verbose: true
+)
+moby.counter_phish
 ```
 
 Note that there's no equivalent short names for constructor arguments.
