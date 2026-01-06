@@ -3,11 +3,12 @@
 
 require 'mechanize'
 require 'pp'
-require_relative 'File/self.collect'
+
+require_relative './File/self.collect'
+require_relative './Moby/VERSION'
 
 class Moby
   TLD = %w{com net org edu int mil gov arpa biz aero name coop info pro museum}
-  VERSION_STRING = '0.9.1'
 
   attr_accessor\
     :debug,
@@ -152,7 +153,7 @@ class Moby
 
   def username_field
     if @username_field_name
-      form[@username_field_name]
+      form.field(@username_field_name)
     elsif @username_field_number
       form.fields[@username_field_number]
     else
@@ -162,7 +163,7 @@ class Moby
 
   def password_field
     if @password_field_name
-      form[@password_field_name]
+      form.field(@password_field_name)
     elsif @password_field_number
       form.fields[@password_field_number]
     else

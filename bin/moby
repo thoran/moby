@@ -1,10 +1,7 @@
 #!/usr/bin/env ruby
 # moby
 
-# 20260105
-# 0.9.1
-
-# Description: Sometimes when they go fishing, they get a whale and it sinks their boat.
+# moby is a credentials poisoning tool which floods phishing forms with fake credentials.
 
 lib_dir = File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
@@ -29,7 +26,10 @@ def switches
     s.set(:username_hostname){'The hostname to be used when the username is an email address.'}
     s.set(:username_prefilled){'No need to supply an email address in the form.'}
     s.set(:v?, :verbose?){'Outputs each submission as it goes.'}
-    s.set(:version){Moby::VERSION_STRING}
+    s.perform(:version) do
+     puts "moby #{Moby::VERSION}"
+     exit
+   end
   end
 end
 
