@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
     'bin/*',
     'lib/**/*.rb',
     'test/**/*.rb',
-    'CHANGES.txt',
+    'CHANGELOG',
     'Gemfile',
     'LICENSE.txt',
     'moby.rb.gemspec',
@@ -44,7 +44,7 @@ Gem::Specification.new do |spec|
 
   spec.metadata = {
     "bug_tracker_uri" => "https://github.com/thoran/moby/issues",
-    "changelog_uri" => "https://github.com/thoran/moby/blob/main/CHANGES.txt",
+    "changelog_uri" => "https://github.com/thoran/moby/blob/main/CHANGELOG",
     "source_code_uri" => "https://github.com/thoran/moby",
     "documentation_uri" => "https://github.com/thoran/moby/blob/main/README.md"
   }

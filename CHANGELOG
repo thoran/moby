@@ -1,0 +1,89 @@
+# CHANGELOG
+
+## 20260807
+
+1.0.1: Add a CHANGELOG in the form changelogger writes, and retire CHANGES.txt.
+
+1. + CHANGELOG, in the form changelogger writes: a dated heading per version, the version and its summary on the first line of the body, then the numbered items, newest first — the form the other repositories already use. Versions 0.8.0 to 1.0.0 are carried across from CHANGES.txt; 0.7.0 to 0.7.4 are recovered from the git-importall revisions, each of which carries a version and a date of its own. Nothing before 0.7.0 is recorded: the 2006 series stamps every version with the one creation date, and the revisions between it and 0.7.0 carry a date but no version, so neither a reliable date nor a reliable version can be had for them.
+2. - CHANGES.txt. The CHANGELOG holds that record now, and keeping both invites them to disagree. Its changelog_uri and file list in moby.rb.gemspec are pointed at CHANGELOG in its place.
+3. ~ lib/Moby/VERSION.rb: VERSION: /1.0.0/1.0.1/
+4. ~ test/Moby/VERSION_test.rb: /1.0.0/1.0.1/
+
+## 20260108
+
+1.0.0: Ensure that tests are in place and that version handling is working properly.
+
+1. + tests
+2. + moby.rb.gemspec
+3. ~ lib/moby.rb: - Moby::VERSION_STRING
+4. ~ lib/moby.rb: Fix finding username and password fields by name. It was returning the name of the field and not the field object.
+5. + lib/Moby/VERSION.rb
+6. ~ bin/moby: + --version flag
+7. ~ README.md: Updated installation and usage.
+8. ~ CHANGES.txt: Reorganised in descending order and added dates.
+9. ~ LICENSE.txt: Updated the years to include the year this was started: /2026/2006-2026/
+
+## 20260105
+
+0.9.1: Fix syntax errors in README.md.
+
+1. ~ README.md: Fix syntax errors.
+2. ~ lib/Moby.rb: VERSION_STRING: /0.9.0/0.9.1/
+
+## 20240605
+
+0.9.0: Merge of 2019's 0.8.0 and 2023's 0.8.1.
+
+## 20231206
+
+0.8.1: Fix when username or password field number is specified or nothing is specified.
+
+1. ~ lib/Whale: ~ set_username_field(): Fix when username field number is specified or nothing is specified.
+2. ~ lib/Whale: ~ set_password_field(): Fix when password field number is specified or nothing is specified.
+
+## 20231119
+
+0.8.0: An accidental fork of 0.7.0 in 2023.
+
+1. + README.md
+2. + CHANGES.txt
+3. + Gemfile
+4. ~ bin/whale: ~ main(): - args (unnecessary)
+5. ~ bin/whale VERSION_STRING --> lib/Whale::VERSION_STRING
+6. ~ bin/whale: ~ switches(): use Whale::VERSION_STRING
+7. ~ lib/Whale.rb: general tidying
+8. + lib/File/self.collect.rb
+
+## 20190820
+
+0.7.4: Rescue Net::OpenTimeout in the submission loop.
+
+1. ~ counter_phish(): + rescue Net::OpenTimeout.
+
+## 20190819
+
+0.7.3: Rescue Net::HTTP::Persistent::Error in place of EOFError.
+
+1. ~ counter_phish(): rescue Net::HTTP::Persistent::Error in place of EOFError.
+
+## 20190819
+
+0.7.2: Set field values on the field objects rather than through the setter methods.
+
+1. ~ counter_phish(): set the user agent and field values inline — mechanize.user_agent_alias, username_field.value, password_field.value — in place of set_user_agent()/set_username_field()/set_password_field().
+2. ~ username(): use the username_is_email_address? predicate, its default nil in place of false.
+3. ~ user_agent: attr_writer in place of attr_accessor.
+4. ~ counter_phish(): verbose reports username_field.value:password_field.value.
+
+## 20190819
+
+0.7.1: Assign to the field's value rather than replacing the field object.
+
+1. ~ set_username_field()/set_password_field(): set the field's value in place of replacing the field object at form.fields[n].
+2. ~ counter_phish(): + rescue EOFError; + pp page in debug.
+
+## 20190815
+
+0.7.0: The earliest recoverable version.
+
+1. whale floods a phishing form with fake credentials: counter_phish() loads the page, then loops submitting a generated username and password, each built from random dictionary words and TLDs. Recorded as an inventory of the first cleanly-versioned revision; the revision before it carries no version and a different structure, and is not reconstructed here.
