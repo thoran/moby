@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## 20260811
+
+2.0.0: Move the Mechanize engine into a pluggable backend and add a Selenium backend alongside it.
+
+1. ~ lib/Moby.rb: the monolithic Moby was the whole Mechanize engine; it becomes a thin facade that builds a Configuration, a RandomInputGenerator and the chosen backend, and delegates #counter_phish to it. The submission loop, the page, form and field finding, and the random credential generation all move out into the classes below.
+2. + lib/Moby/Backends/MechanizeBackend.rb: the Mechanize functionality, moved out of Moby and behind a backend interface, driven by Configuration and RandomInputGenerator.
+3. + lib/Moby/Backends/SeleniumBackend.rb: a second backend driving a real headless browser (Chrome or Firefox), for forms that filter non-browser clients so the Mechanize submissions never land.
+4. + lib/Moby/Backends.rb: Moby::Backends.for, which chooses the backend from the configuration: :mechanize (the default) or :selenium.
+5. + lib/Moby/Configuration.rb: Moby::Configuration, a settings object for a run (url, backend, browser, form and field identification, username generation, iterations, delay, word list).
+6. + lib/Moby/RandomInputGenerator.rb: Moby::RandomInputGenerator, the fake-credential generation (random username and password, optionally email-shaped), moved out of Moby.
+7. + lib/Selenium/ and lib/Thoran/Selenium/: Selenium::WebDriver::Driver#attempt (retry a block) and #element_present?, used by the Selenium backend.
+8. ~ bin/moby: builds a Configuration and runs the selected backend through the facade; + --backend, + --browser, + --iterations (moby runs until interrupted when it is omitted), + --delay; and the previously inert --username-prefilled is wired through, so only the password is submitted when the username is already on the form.
+9. - lib/File/self.collect.rb, - lib/Thoran/File/SelfCollect/self.collect.rb: File.collect was used only by the old Moby; RandomInputGenerator reads the word list with File.readlines.
+10. ~ test/moby_test.rb: it exercised the removed Moby monolith; rewritten to test the Moby facade (backend selection). + test/Moby/Configuration_test.rb, RandomInputGenerator_test.rb, Backends_test.rb, Backends/MechanizeBackend_test.rb and Backends/SeleniumBackend_test.rb.
+11. ~ moby.rb.gemspec: + selenium-webdriver (~> 4).
+12. ~ moby.rb.gemspec: required_ruby_version: /2.5.0/3.3.0/, which selenium-webdriver 4 requires.
+13. ~ Gemfile: + ostruct, which switches.rb requires and which is no longer a default gem as of Ruby 4.0.
+14. ~ lib/Moby/VERSION.rb: VERSION: /1.0.1/2.0.0/
+15. ~ test/Moby/VERSION_test.rb: /1.0.1/2.0.0/
+
+
 ## 20260807
 
 1.0.1: Add a CHANGELOG in the form changelogger writes, and retire CHANGES.txt.
@@ -8,6 +29,7 @@
 2. - CHANGES.txt. The CHANGELOG holds that record now, and keeping both invites them to disagree. Its changelog_uri and file list in moby.rb.gemspec are pointed at CHANGELOG in its place.
 3. ~ lib/Moby/VERSION.rb: VERSION: /1.0.0/1.0.1/
 4. ~ test/Moby/VERSION_test.rb: /1.0.0/1.0.1/
+
 
 ## 20260108
 
@@ -23,6 +45,7 @@
 8. ~ CHANGES.txt: Reorganised in descending order and added dates.
 9. ~ LICENSE.txt: Updated the years to include the year this was started: /2026/2006-2026/
 
+
 ## 20260105
 
 0.9.1: Fix syntax errors in README.md.
@@ -30,9 +53,11 @@
 1. ~ README.md: Fix syntax errors.
 2. ~ lib/Moby.rb: VERSION_STRING: /0.9.0/0.9.1/
 
+
 ## 20240605
 
 0.9.0: Merge of 2019's 0.8.0 and 2023's 0.8.1.
+
 
 ## 20231206
 
@@ -40,6 +65,7 @@
 
 1. ~ lib/Whale: ~ set_username_field(): Fix when username field number is specified or nothing is specified.
 2. ~ lib/Whale: ~ set_password_field(): Fix when password field number is specified or nothing is specified.
+
 
 ## 20231119
 
@@ -54,17 +80,20 @@
 7. ~ lib/Whale.rb: general tidying
 8. + lib/File/self.collect.rb
 
+
 ## 20190820
 
 0.7.4: Rescue Net::OpenTimeout in the submission loop.
 
 1. ~ counter_phish(): + rescue Net::OpenTimeout.
 
+
 ## 20190819
 
 0.7.3: Rescue Net::HTTP::Persistent::Error in place of EOFError.
 
 1. ~ counter_phish(): rescue Net::HTTP::Persistent::Error in place of EOFError.
+
 
 ## 20190819
 
@@ -75,12 +104,14 @@
 3. ~ user_agent: attr_writer in place of attr_accessor.
 4. ~ counter_phish(): verbose reports username_field.value:password_field.value.
 
+
 ## 20190819
 
 0.7.1: Assign to the field's value rather than replacing the field object.
 
 1. ~ set_username_field()/set_password_field(): set the field's value in place of replacing the field object at form.fields[n].
 2. ~ counter_phish(): + rescue EOFError; + pp page in debug.
+
 
 ## 20190815
 

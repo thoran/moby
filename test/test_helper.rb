@@ -3,6 +3,7 @@
 require 'minitest/autorun'
 require 'minitest-spec-context'
 require 'webmock/minitest'
+require 'tempfile'
 
 require_relative '../lib/moby'
 
@@ -33,4 +34,18 @@ module TestFixtures
       </body>
     </html>
   HTML
+
+  WORDS = %w{
+    alpha bravo charlie delta echo foxtrot golf hotel india juliet
+    kilo lima mike november oscar papa quebec romeo sierra tango
+    uniform victor whiskey xray yankee zulu apple banana cherry date
+    elder fig grape honey iris jasmine kiwi lemon mango nutmeg
+  }.freeze
+
+  WORD_LIST_FILE = Tempfile.new('moby_words').tap do |file|
+    file.write(WORDS.join("\n") << "\n")
+    file.flush
+  end
+
+  WORD_LIST_PATH = WORD_LIST_FILE.path
 end

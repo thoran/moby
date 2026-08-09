@@ -16,9 +16,10 @@ Gem::Specification.new do |spec|
   spec.homepage = 'https://github.com/thoran/moby'
   spec.license = 'MIT'
 
-  spec.required_ruby_version = ">= 2.5.0"
+  spec.required_ruby_version = ">= 3.3.0"
 
   spec.add_dependency('mechanize', '~> 2')
+  spec.add_dependency('selenium-webdriver', '~> 4')
   spec.add_dependency('switches.rb', '~> 0')
 
   spec.add_development_dependency('minitest')

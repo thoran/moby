@@ -11,12 +11,16 @@ require 'switches.rb'
 
 def switches
   Switches.new do |s|
-    s.banner = 'Usage: whale <url> and any of the following options...'
+    s.banner = 'Usage: moby <url> and any of the following options...'
     s.set(:a, :user_agent){'What webclient I should pretend to be.'}
+    s.set(:b, :backend){'Which backend to use: mechanize (default) or selenium.'}
+    s.set(:browser){'Which browser the selenium backend should drive: chrome (default) or firefox.'}
     s.set(:debug?){'Show debugging information.'}
+    s.set(:delay){'Seconds to wait between submissions.'}
     s.set(:e?, :username_is_email_address?){'Automatically generate a username which is in the form of an email address.'}
     s.set(:f, :form, :form_name){'If left empty, the first form on the page will be used.'}
-    s.set(:help){'Usage: whale <url> and any of the following options...'}
+    s.set(:help){'Usage: moby <url> and any of the following options...'}
+    s.set(:iterations){'How many submissions to make.  If left empty, moby runs until interrupted.'}
     s.set(:n, :form_number){'This will set the number of the form in order of appearance on the page.  Use zero-based indexing.'}
     s.set(:pass_field, :password_field, :pass_field_name, :password_field_name){'The name of the password field.'}
     s.set(:pass_field_number, :password_field_number){'The position of the password field in relation to the form it is attached to.  Use zero-based indexing.'}
@@ -24,7 +28,7 @@ def switches
     s.set(:user_field, :username_field, :user_field_name, :username_field_name){'The name of the username field.'}
     s.set(:user_field_number, :username_field_number){'The position of the username field in relation to the form it is attached to.  Use zero-based indexing.'}
     s.set(:username_hostname){'The hostname to be used when the username is an email address.'}
-    s.set(:username_prefilled){'No need to supply an email address in the form.'}
+    s.set(:username_prefilled?){'The username is already filled in on the form, so only submit the password.'}
     s.set(:v?, :verbose?){'Outputs each submission as it goes.'}
     s.perform(:version) do
      puts "moby #{Moby::VERSION}"
@@ -35,31 +39,24 @@ end
 
 def main
   args = switches.to_h
-  debug = args[:debug?]
-  form_name = args[:form_name]
-  form_number = args[:form_number]
-  password_field_name = args[:password_field_name]
-  password_field_number = args[:password_field_number]
-  url = args[:url]
-  user_agent = args[:user_agent]
-  username_field_name = args[:username_field_name]
-  username_field_number = args[:username_field_number]
-  username_hostname = args[:username_hostname]
-  username_is_email_address = args[:username_is_email_address?]
-  verbose = args[:verbose?]
   moby = Moby.new(
-    debug: debug,
-    form_name: form_name,
-    form_number: form_number,
-    password_field_name: password_field_name,
-    password_field_number: password_field_number,
-    url: url,
-    user_agent: user_agent,
-    username_field_name: username_field_name,
-    username_field_number: username_field_number,
-    username_hostname: username_hostname,
-    username_is_email_address: username_is_email_address,
-    verbose: verbose
+    backend: args[:backend],
+    browser: args[:browser],
+    debug: args[:debug?],
+    delay: args[:delay],
+    form_name: args[:form_name],
+    form_number: args[:form_number],
+    iterations: args[:iterations],
+    password_field_name: args[:password_field_name],
+    password_field_number: args[:password_field_number],
+    url: args[:url],
+    user_agent: args[:user_agent],
+    username_field_name: args[:username_field_name],
+    username_field_number: args[:username_field_number],
+    username_hostname: args[:username_hostname],
+    username_is_email_address: args[:username_is_email_address?],
+    username_prefilled: args[:username_prefilled?],
+    verbose: args[:verbose?]
   )
   moby.counter_phish
 end

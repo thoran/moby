@@ -16,8 +16,8 @@ describe Moby do
       _(Moby::VERSION).must_match(/\d+\.\d+\.\d+/)
     end
 
-    it "version is 1.0.1" do
-      _(Moby::VERSION).must_equal('1.0.1')
+    it "version is 2.0.0" do
+      _(Moby::VERSION).must_equal('2.0.0')
     end
   end
 end
