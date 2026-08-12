@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 20260812
+
+2.0.1: Tidy the gemspec and guard it with a test.
+
+1. ~ moby.rb.gemspec: declare the dependencies as data — spec.dependencies = [...] and spec.development_dependencies = [...], via setters added in a local reopening of Gem::Specification — in place of the add_dependency/add_development_dependency calls; - spec.date, which was a stale literal (2.0.0 shipped the gem with it), letting RubyGems' default stand (rubygems.org uses the push time regardless).
+2. + test/gemspec_test.rb: loads moby.rb.gemspec and checks that it validates, pins no date (spec.date left at RubyGems' default), takes its version from Moby::VERSION, and declares the expected runtime and development dependencies — a guard for the declarative gemspec above, whose custom setters are where a dependency could silently go missing, and against re-pinning the stale date that 2.0.0 shipped with.
+3. ~ lib/Moby/VERSION.rb: VERSION: /2.0.0/2.0.1/
+4. ~ test/Moby/VERSION_test.rb: /2.0.0/2.0.1/
+
+
 ## 20260811
 
 2.0.0: Move the Mechanize engine into a pluggable backend and add a Selenium backend alongside it.

@@ -2,11 +2,19 @@
 
 require_relative './lib/Moby/VERSION'
 
+class Gem::Specification
+  def dependencies=(gems)
+    gems.each{|gem| add_dependency(*gem)}
+  end
+
+  def development_dependencies=(gems)
+    gems.each{|gem| add_development_dependency(*gem)}
+  end
+end
+
 Gem::Specification.new do |spec|
   spec.name = 'moby.rb'
-
   spec.version = Moby::VERSION
-  spec.date = '2026-01-08'
 
   spec.summary = "Moby is a credentials poisoning tool which floods phishing forms with fake credentials."
   spec.description = "Sometimes when they go fishing, they get a whale and it sinks their boat. Moby is a counter-phishing tool that floods phishing websites with fake login credentials, making harvested data useless."
@@ -18,14 +26,18 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 3.3.0"
 
-  spec.add_dependency('mechanize', '~> 2')
-  spec.add_dependency('selenium-webdriver', '~> 4')
-  spec.add_dependency('switches.rb', '~> 0')
+  spec.dependencies = [
+    ['mechanize', '~> 2'],
+    ['selenium-webdriver', '~> 4'],
+    ['switches.rb', '~> 0'],
+  ]
 
-  spec.add_development_dependency('minitest')
-  spec.add_development_dependency('minitest-spec-context')
-  spec.add_development_dependency('rake')
-  spec.add_development_dependency('webmock')
+  spec.development_dependencies = [
+    'minitest',
+    'minitest-spec-context',
+    'rake',
+    'webmock'
+  ]
 
   spec.files = Dir[
     'bin/*',
