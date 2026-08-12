@@ -4,20 +4,17 @@ require_relative '../test_helper'
 
 describe Moby do
   describe "VERSION" do
-    it "has VERSION constant" do
-      _(defined?(Moby::VERSION)).wont_be_nil
+    it "is a string" do
+      _(Moby::VERSION).must_be_instance_of String
     end
 
-    it "version is a string" do
-      _(Moby::VERSION).must_be_kind_of(String)
+    it "is three numbers separated by dots" do
+      _(Moby::VERSION).must_match(/\A\d+\.\d+\.\d+\z/)
     end
 
-    it "version follows semver pattern" do
-      _(Moby::VERSION).must_match(/\d+\.\d+\.\d+/)
-    end
-
-    it "version is 2.0.1" do
-      _(Moby::VERSION).must_equal('2.0.1')
+    it "matches the newest entry in the CHANGELOG" do
+      changelog = File.read(File.expand_path('../../CHANGELOG', __dir__))
+      _(changelog[/^(\d+\.\d+\.\d+):/, 1]).must_equal Moby::VERSION
     end
   end
 end
