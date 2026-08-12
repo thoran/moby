@@ -131,4 +131,14 @@ describe Moby::Configuration do
       _(Moby::Configuration.new(url: url, form_name: 'login').using_form_name?).must_equal(true)
     end
   end
+
+  describe "#word_list_path" do
+    it "defaults to /usr/share/dict/words" do
+      _(Moby::Configuration.new(url: url).word_list_path).must_equal('/usr/share/dict/words')
+    end
+
+    it "returns the given path" do
+      _(Moby::Configuration.new(url: url, word_list_path: '/tmp/words').word_list_path).must_equal('/tmp/words')
+    end
+  end
 end

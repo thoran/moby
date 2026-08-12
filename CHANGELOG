@@ -2,6 +2,13 @@
 
 ## 20260812
 
+2.1.0: Expose the word list on the command line.
+
+1. + bin/moby: + --word-list (--word-list-path), which sets Configuration's word_list_path. The 2.0.0 backend already read a configurable word list — RandomInputGenerator reads word_list_path, defaulting to /usr/share/dict/words — but bin/moby exposed no switch to reach it; this connects the flag to the plumbing.
+2. ~ bin/moby: group switches() into blank-line-separated blocks (location; client and backend; run; form; username field; password field; username generation; output; help and version) in place of the alphabetical list.
+3. + test/Moby/Configuration_test.rb: a #word_list_path test — its /usr/share/dict/words default and a given override. It was the one Configuration setting without coverage, and --word-list is what makes it reachable.
+4. ~ lib/Moby/VERSION.rb: VERSION: /2.0.2/2.1.0/
+
 2.0.2: Adopt the CHANGELOG-matching version test.
 
 1. ~ test/Moby/VERSION_test.rb: replace the hardcoded "version is X.Y.Z" assertion and the loose semver check with the standard form — VERSION is a String, an anchored X.Y.Z, and matches the newest CHANGELOG entry. It no longer needs a per-release edit and it guards against VERSION.rb ↔ CHANGELOG drift.
