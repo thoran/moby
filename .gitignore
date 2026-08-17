@@ -1,3 +1,5 @@
+# .gitignore
+
 # Gem files
 *.gem
 *.rbc
@@ -7,9 +9,8 @@
 /pkg/
 /spec/reports/
 /spec/examples.txt
-/test/tmp/
 /test/version_tmp/
-/tmp/
+tmp/
 
 # Bundler
 /vendor/bundle
@@ -41,3 +42,6 @@ _yardoc
 
 # Test artifacts
 .minitest-*
+
+# AI
+.claude

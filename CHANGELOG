@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 20260817
+
+2.1.1: Bring the .gitignore into line with the template.
+
+1. + .gitignore: The `# .gitignore` heading the other repositories carry, and a `# AI` section ignoring .claude.
+2. ~ .gitignore: /\/test\/tmp\/\n\/tmp\//tmp\//, one pattern covering both and any other tmp directory besides.
+
+
 ## 20260812
 
 2.1.0: Expose the word list on the command line.
