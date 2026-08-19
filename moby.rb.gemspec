@@ -39,17 +39,17 @@ Gem::Specification.new do |spec|
     'webmock'
   ]
 
-  spec.files = Dir[
-    'bin/*',
-    'lib/**/*.rb',
-    'test/**/*.rb',
+  spec.files = [
+    Dir['bin/*'],
+    Dir['lib/**/*.rb'],
+    Dir['test/**/*.rb'],
     'CHANGELOG',
     'Gemfile',
     'LICENSE.txt',
     'moby.rb.gemspec',
     'Rakefile',
     'README.md',
-  ]
+  ].flatten
 
   spec.bindir = 'bin'
   spec.executables = ['moby']

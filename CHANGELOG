@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 20260819
+
+2.1.2: ~ moby.rb.gemspec: spec.files as [...].flatten with a Dir[] per glob, in place of one Dir[] over the lot.
+
+1. ~ moby.rb.gemspec: spec.files built as an array with Dir[] around each glob and flattened, rather than a single Dir[] taking the globs and the loose filenames together. This is the form the other six gems use, and it is the safer one. Dir[] answers with what matches, so under the old form a loose filename naming a file which is not there contributes nothing and the gem builds anyway, short of what its manifest said. Under this one the name reaches spec.files as a literal and gem build refuses: "[\"LICENSE\"] are not files". Nothing was being dropped here — all six loose files are present and the same 27 ship — but the old form could not have told me so.
+2. The same applies to a filename holding a glob character. Under the old form weird[1].txt is read as a character class and matches nothing; under this one it is a name.
+3. impuri went five published versions declaring spec.license = 'MIT' with no LICENSE in the repository, which is this failure in the shape it actually takes. Its 0.12.4 added the file. Under a Dir[] over the lot, adding 'LICENSE' to the manifest would have gone on building quietly until somebody thought to look inside the gem.
+4. The order is unchanged, the globs having already been first with the loose files alphabetically after them.
+5. ~ Moby::VERSION: /2.1.1/2.1.2/
+
+
 ## 20260817
 
 2.1.1: Bring the .gitignore into line with the template.
