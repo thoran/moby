@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 20260820
+
+2.1.3: Backfill the CHANGELOG below 0.7.0 to the 0.0.0 origin.
+
+1. + CHANGELOG: 0.0.0 through 0.6.0, the series 1.0.1 left out. 1.0.1 floored the record at 0.7.0 on the view that below it "neither a reliable date nor a reliable version can be had"; the git-importall revisions carry more than that allowed, and their commit messages have since been rewritten to name a version apiece, so the CHANGELOG now reaches as far back as they do.
+2. The versions are mostly read off the source, not guessed: 0.0.1 to 0.4.3 each carry a `# X.Y.Z` header, and 0.4.4 to 0.5.0 a WHALE_VERSION constant. Three are a judgement call — 0.0.0 (the bare spike, no stamp), 0.5.1 (a patch left standing on 0.5.0's unbumped WHALE_VERSION), and 0.6.0 (the extraction commit, where the constant does not survive the move) — each placed one commit, one version, sized by its change.
+3. The dates are shakier than the versions. The 2006 series stamps every version with the one creation date, 20061009; the 2008 headers are per-revision but not always bumped — 0.4.8 stamps 20080829, later than the 0.5.0 and 0.5.1 above it, so the series is ordered by version and 0.4.8 sits by its number, under its own out-of-sequence date. 0.0.0 carries no date at all.
+4. ~ CHANGELOG: the 0.7.0 entry no longer calls itself "the earliest recoverable version" — it is not, now — and reads as the change it was.
+5. ~ lib/Moby/VERSION.rb: VERSION: /2.1.2/2.1.3/
+
+
 ## 20260819
 
 2.1.2: ~ moby.rb.gemspec: spec.files as [...].flatten with a Dir[] per glob, in place of one Dir[] over the lot.
@@ -156,6 +167,110 @@
 
 ## 20190815
 
-0.7.0: The earliest recoverable version.
+0.7.0: Move to a Whale library: add #switches and #main.
 
-1. whale floods a phishing form with fake credentials: counter_phish() loads the page, then loops submitting a generated username and password, each built from random dictionary words and TLDs. Recorded as an inventory of the first cleanly-versioned revision; the revision before it carries no version and a different structure, and is not reconstructed here.
+1. The engine 0.6.0 pulled into lib/Whale.rb becomes the library the bin drives: + switches(), + main(). whale floods a phishing form with fake credentials — counter_phish() loads the page, then loops submitting a generated username and password, each built from random dictionary words and TLDs.
+
+
+## 20110907
+
+0.6.0: Extract the engine from bin/whale into lib/Whale.rb.
+
+1. The class and its methods move out of bin/whale into lib/Whale.rb, leaving the bin to require and drive it — the split 0.7.0 builds #switches and #main on. Version inferred: the WHALE_VERSION constant does not survive the move.
+
+
+## 20080521
+
+0.5.1: Small #initialize and #parse_options fix.
+
+1. Version inferred: it patches #initialize and #parse_options but leaves WHALE_VERSION at 0.5.0.
+
+0.5.0: Rebuild Options on OpenStruct: #set, #on, #banner=, #parse!.
+
+1. + require 'ostruct'; Options rebuilt on OpenStruct — + set(), + on(), + banner=(), + parse!().
+
+
+## 20080829
+
+0.4.8: Small #initialize and #parse_options fixes.
+
+1. Its 20080829 header is out of sequence — later than the 0.5.0 and 0.5.1 above — an unbumped stamp, not a later release; ordered here by version.
+
+
+## 20080521
+
+0.4.7: Add File.collect and #words; drop #read_words_file.
+
+1. + class File with self.collect(), + words(); - read_words_file(). The word list is read through File.collect now.
+
+
+## 20080520
+
+0.4.6: Switch to OptionParser: add #parse and #parse_url.
+
+1. + require 'optparse'; + parse(), + parse_url() — option handling through OptionParser.
+
+0.4.5: Add page and form fetching and the username and password field setters.
+
+1. + page, + form, + username, + password, + set_username_field(), + set_password_field().
+
+0.4.4: Add option parsing: class Options and #parse_options.
+
+1. + class Options, + parse_options() — a first cut at command-line options, before the OptionParser switch at 0.4.6.
+
+0.4.3: Small #initialize and #counter_phish fixes.
+
+
+## 20061009
+
+0.4.2: Small #initialize and #counter_phish fixes.
+
+0.4.1: Drop the pp require again.
+
+0.4.0: Re-add pp; tidy the loop.
+
+0.3.1: Drop the pp require.
+
+0.3.0: Add #random_TLD for email-shaped usernames.
+
+1. + random_TLD(), so a generated username can be shaped like an email address.
+
+0.2.4: Small #initialize and #counter_phish fixes.
+
+0.2.3: Small #initialize and #counter_phish fixes.
+
+0.2.2: Small #initialize and #counter_phish fixes.
+
+0.2.1: Small #initialize and #counter_phish fixes.
+
+0.2.0: Small #initialize and #counter_phish fixes.
+
+0.1.2: Small #initialize fix.
+
+0.1.1: Small #initialize and #counter_phish fixes.
+
+0.1.0: Drop the pp require; tidy the loop.
+
+0.0.7: Small #initialize and #counter_phish fixes.
+
+0.0.6: Small #initialize and #counter_phish fixes.
+
+0.0.5: Adjust the word-file reading.
+
+0.0.4: Refine #initialize and #counter_phish.
+
+0.0.3: Replace RandomMethod with #random_word.
+
+1. - module RandomMethod (- random(), - random_method()); + random_word() in its place.
+
+0.0.2: Add #counter_phish and random-word selection.
+
+1. + counter_phish(), + read_words_file(), random-word selection; - select().
+
+0.0.1: First cut: class Whale, #initialize, #select.
+
+1. + class Whale, + initialize(), + select() — the spike turned into a class.
+
+0.0.0: A Mechanize spike — fetch a page and submit its form.
+
+1. The bare origin: require 'rubygems', 'mechanize', 'pp'; fetch a page and submit its form. No Whale class, and no version or date stamp of its own — the inventory slot the 0.7.0 entry used to hold.
