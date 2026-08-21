@@ -45,7 +45,7 @@ Gem::Specification.new do |spec|
     Dir['test/**/*.rb'],
     'CHANGELOG',
     'Gemfile',
-    'LICENSE.txt',
+    'LICENSE',
     'moby.rb.gemspec',
     'Rakefile',
     'README.md',
