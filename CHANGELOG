@@ -2,6 +2,11 @@
 
 ## 20260821
 
+2.1.5: + README.md: a License section, saying MIT.
+
+1. + README.md: a License section, last, after Contributing. 2.1.4 renamed the licence file and left the README silent about it, so this was the one repository here carrying a LICENSE which its README never mentioned, the inverse of the four which named MIT with no file.
+2. ~ Moby::VERSION: /2.1.4/2.1.5/
+
 2.1.4: /LICENSE.txt/LICENSE/
 
 1. ~ LICENSE.txt --> LICENSE, so that the name matches the one every other repository here uses. impuri added its at 0.12.4 as LICENSE, and the tap's other nineteen are about to gain one under that name; this was the odd one out, and a licence file is looked for by name.
